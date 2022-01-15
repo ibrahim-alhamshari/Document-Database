@@ -1,11 +1,50 @@
 package databaseClasses;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import model.User;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import services.UserService;
+
+import javax.swing.*;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
-public class App {
+public class App implements Runnable{
 
-    public static void main(String[] args) throws IOException {
+
+    public static void main(String[] args) throws InterruptedException {
+
+        Thread thread = new Thread(){
+            public void run(){
+                UserService userService1 = UserService.getInstance();
+                System.out.println(userService1);
+            }
+        };
+
+        Thread thread2 = new Thread(){
+            public void run(){
+                UserService userService2 = UserService.getInstance();
+                System.out.println(userService2);
+            }
+        };
+        thread.start();
+        thread2.start();
+
+    }
+
+
+
+
+    public static void main2(String[] args) throws IOException {
 //        File file = new File("unicorns");
 
 //        BufferedReader reader = new BufferedReader(new FileReader("unicorns"));
@@ -32,14 +71,28 @@ public class App {
 
 //        Contact contact = new Contact("Ibrahim" , "Alhamshari" , 25);
 
-//        Gson gson= new Gson();
-//        String contactObject = gson.toJson(contact);
-//        System.out.println( "toJson: " + contactObject);
 
-//        String contactJson = "[{\"firstName\":\"Ibrahim\",\"lastName\":\"Alhamshari\",\"age\":25}," +
-//                "{\"firstName\":\"Ali\",\"lastName\":\"Omar\",\"age\":47}," +
-//                "{\"firstName\":\"Saed\",\"lastName\":\"Rami\",\"age\":16}]";  //if one of them does not match the property in my class, it will be ignored.
-////
+       User user = new User(4 , LocalDateTime.now() , "Admin" , "admin" , "admin@gmail.com");
+       Gson gson = new Gson();
+       String data = gson.toJson(user);
+
+
+
+        try (FileWriter fileWriter = new FileWriter("src/main/resources/recentquotes" , true)){
+            fileWriter.write(data);
+            fileWriter.write("\n");
+            fileWriter.flush();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+        Path path = Paths.get("src/main/resources/recentquotes");
+
+        long lines=0;
+        lines = Files.lines(path).count();
+        System.out.println(lines);
+
+
 ////        Contact contactList = gson.fromJson(contactJson , Contact.class);
 //        Contact contact1 =  gson.fromJson(contactJson , Contact.class);
 //        System.out.println(contact1);
@@ -53,25 +106,32 @@ public class App {
 //        }
 
 
-//        FileReader reader = new FileReader("src/main/resources/recentquotes.json");
+//        FileReader reader = new FileReader("src/main/resources/addingFromClient");
 ////        Gson gson = new Gson();
-//
+////
 //        List<Map> mapList = gson.fromJson(reader , List.class);
 //        int min=0;
 //        int max= mapList.size()-1;
 //        int j= (int) (Math.random()*(max-min+1)+min);
 //
 //        Map map = mapList.get(j);
-
+//
 //        System.out.println(map);
 
         //*****************************************************************************************************************
 
-        FileOutputStream outputStream = new FileOutputStream("src/main/resources/addingFromClient.json" , true);
-//        PrintWriter writer = new PrintWriter(new OutputStreamWriter(outputStream, Arrays.toString("\"Hello\":\"world\"".getBytes())));
-        outputStream.write("\"Helo\":\"wo77rld\"\r\n".getBytes());
-        outputStream.flush();
-        outputStream.close();
+//        FileOutputStream outputStream = new FileOutputStream("src/main/resources/addingFromClient" , true);
+//////        PrintWriter writer = new PrintWriter(new OutputStreamWriter(outputStream, Arrays.toString("\"Hello\":\"world\"".getBytes())));
+//        outputStream.write( jsonObject.toJSONString().getBytes());
+//        outputStream.flush();
+//        outputStream.close();
+
+
+
+    }
+
+    @Override
+    public void run() {
 
     }
 }
