@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 
 public class ClientHandler implements Runnable {
@@ -35,12 +36,9 @@ public class ClientHandler implements Runnable {
         dataOutputStream = new DataOutputStream(socket.getOutputStream());
         dataInputStream = new DataInputStream(socket.getInputStream());
 
-        sendMessageToClients("A new user has entered the system");
-
         userServices = UserService.getInstance();
         clientHandlerList.add(this);
 
-//        login();
     }
 
 
@@ -49,15 +47,18 @@ public class ClientHandler implements Runnable {
 
         while (socket.isConnected()) {
             try {
-//                sendMessageToClients(clientUsername + ": " + msg);
+
                 login();
+
             } catch (IOException e) {
+
                 try {
                     removeClientHandler();
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
                 break;
+
             }
         }
 
@@ -66,14 +67,17 @@ public class ClientHandler implements Runnable {
 
     public void sendMessageToClients(String messageToClients) throws IOException {
 
-        for (ClientHandler clientHandler : clientHandlerList) {
 
-            if (!clientHandler.clientUsername.equals(this.clientUsername)) {
-                clientHandler.bufferedWriter.write(messageToClients);
-                clientHandler.bufferedWriter.newLine();
-                clientHandler.bufferedWriter.flush();
-//                dataOutputStream.writeUTF(messageToClients);
-//                dataOutputStream.flush();
+
+        for (ClientHandler clientHandler : clientHandlerList) {
+            if(Objects.nonNull(this.clientUsername)) {
+
+                if (!clientHandler.clientUsername.equals(this.clientUsername)) {
+                    clientHandler.bufferedWriter.write(messageToClients);
+                    clientHandler.bufferedWriter.newLine();
+                    clientHandler.bufferedWriter.flush();
+                }
+
             }
         }
 
@@ -103,10 +107,11 @@ public class ClientHandler implements Runnable {
                 continue;
             }
 
-            boolean inUserFound = userServices.isUserFound(username, password);
+            boolean isUserFound = userServices.isUserFound(username, password);
 
-            if (inUserFound) {
+            if (isUserFound) {
                 this.clientUsername = username;
+//                sendMessageToClients("A new user has entered the system");
                 break;
             }
 
@@ -250,7 +255,7 @@ public class ClientHandler implements Runnable {
 
             User user = userServices.getUserByUserName(username);
             if(user==null){
-                dataOutputStream.writeUTF("There is no user with this username: " + username);
+                dataOutputStream.writeUTF("There is no user with this username: " + username + "\n");
                 continue;
             }
 

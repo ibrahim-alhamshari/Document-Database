@@ -119,6 +119,13 @@ public class UserService {  // singleton pattern
                 item = user;
             }
         });
+
+        try {
+            resetFile();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
     }
 
 
