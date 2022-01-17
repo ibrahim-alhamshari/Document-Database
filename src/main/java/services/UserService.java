@@ -1,9 +1,12 @@
 package services;
 
 import com.google.gson.Gson;
+import model.Task;
 import model.User;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -13,6 +16,7 @@ public class UserService {  // singleton pattern
 
     private static UserService instance = new UserService();
     private static List<User> userList = new ArrayList<>();
+    private static List<Task> taskList = new ArrayList<>();
 
     private UserService(){}
 
@@ -44,18 +48,15 @@ public class UserService {  // singleton pattern
     }
 
 
-    private void resetFile() throws FileNotFoundException {
+    private void resetUsersSchema() throws FileNotFoundException {
 
-        File tmpFile = new File("src/main/resources/tmpFile");
+        File tmpFile = new File("src/main/resources/tmpUserFile");
         File oldFile = new File("src/main/resources/users");
-
-
         Gson gson = new Gson();
 
-        try(FileWriter fileWriter = new FileWriter("src/main/resources/tmpFile" , true)) {
+        try(FileWriter fileWriter = new FileWriter("src/main/resources/tmpUserFile" , true)) {
 
-            userList.stream().forEach(item->{
-
+            userList.forEach(item->{
                 try {
                     fileWriter.write(gson.toJson(item));
                     fileWriter.write("\n");
@@ -63,16 +64,10 @@ public class UserService {  // singleton pattern
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
             });
+
             fileWriter.close();
-
-            if (oldFile.delete()) {
-                System.out.println("Deleted the file: " + oldFile.getName());
-            } else {
-                System.out.println("Failed to delete the file.");
-            }
-
+            oldFile.delete();
             tmpFile.renameTo(new File("src/main/resources/users"));
 
             userList = getAllUsers();
@@ -82,6 +77,30 @@ public class UserService {  // singleton pattern
 
         }
 
+    }
+
+
+    private void resetTaskSchema(){
+        File tmpFile = new File("src/main/resources/tmpTaskFile");
+        File oldFile = new File("src/main/resources/tasks");
+        Gson gson = new Gson();
+
+        try(FileWriter fileWriter = new FileWriter("src/main/resources/tmpTaskFile")){
+            taskList.forEach(task->{
+                try {
+                fileWriter.write(gson.toJson(task));
+                fileWriter.write("\n");
+                fileWriter.flush();
+                }catch (IOException e){
+                    e.printStackTrace();
+                }
+            });
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+        oldFile.delete();
+        tmpFile.renameTo(new File("src/main/resources/tasks"));
     }
 
 
@@ -108,28 +127,41 @@ public class UserService {  // singleton pattern
 
 
 
-    public void createUser(User user){
+    public void createUser(User newUser) throws IOException {
+
+        long lines =0;
+        lines = Files.lines(Paths.get("src/main/resources/users")).count()+1;
+        newUser.setId(lines);
+        userList.add(newUser);
+        resetUsersSchema();
 
     }
 
 
-    public void updateUser(User user){
+
+    public void createTask(Task newTask) throws IOException {
+        long lines =0;
+        lines = Files.lines(Paths.get("")).count();
+        newTask.setId(lines);
+        taskList.add(newTask);
+        resetTaskSchema();
+    }
+
+
+    public void updateUser(User user) throws FileNotFoundException {
+
         userList.stream().forEach(item->{
             if(item.getUsername().equalsIgnoreCase(user.getUsername())){
                 item = user;
             }
         });
 
-        try {
-            resetFile();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
+        resetUsersSchema();
     }
 
 
-    public void deleteUser(User user) throws FileNotFoundException {
+
+    public void removeUser(User user) throws FileNotFoundException {
         userList.remove(user);
 
         if(userList.size()==0)
@@ -141,9 +173,7 @@ public class UserService {  // singleton pattern
             item.setId(index.getAndIncrement());
         });
 
-        Gson gson = new Gson();
-
-        resetFile();
+        resetUsersSchema();
     }
 
 }

@@ -72,7 +72,7 @@ public class App implements Runnable{
 //        Contact contact = new Contact("Ibrahim" , "Alhamshari" , 25);
 
 
-       User user = new User(4 , LocalDateTime.now() , "Admin" , "admin" , "admin@gmail.com");
+       User user = new User(LocalDateTime.now() , "Admin" , "admin" , "admin@gmail.com");
        Gson gson = new Gson();
        String data = gson.toJson(user);
 

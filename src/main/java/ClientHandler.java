@@ -1,17 +1,16 @@
+import model.Task;
 import model.User;
 import services.UserService;
 
 import java.io.*;
 import java.net.Socket;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
 
 public class ClientHandler implements Runnable {
 
     public static List<ClientHandler> clientHandlerList = new ArrayList<>();
+    public static Queue queue = new LinkedList() ;
 
     private Socket socket;
     private BufferedReader bufferedReader;
@@ -86,24 +85,20 @@ public class ClientHandler implements Runnable {
 
 
     public void login() throws IOException {
-        this.bufferedWriter.write("Enter your username:");
+        String message ="Enter your username:";
 
         while (true) {
-            this.bufferedWriter.newLine();
-            this.bufferedWriter.flush();
+
+            writeToClient(message);
 
             String username = bufferedReader.readLine();
 
-            this.bufferedWriter.write("Enter your password: ");
-            this.bufferedWriter.newLine();
-            this.bufferedWriter.flush();
+            writeToClient("Enter your password: ");
             String password = bufferedReader.readLine();
 
-
-            if (username==null || password==null) {
-                this.bufferedWriter.write("Please fill all fields !");
-                this.bufferedWriter.newLine();
-                this.bufferedWriter.flush();
+            if (username.equals("") || password.equals("")) {
+                writeToClient("Please fill all fields !");
+                message ="Re-enter your username";
                 continue;
             }
 
@@ -111,16 +106,20 @@ public class ClientHandler implements Runnable {
 
             if (isUserFound) {
                 this.clientUsername = username;
-//                sendMessageToClients("A new user has entered the system");
+                writeToClient("Success login ...");
                 break;
             }
 
-            dataOutputStream.writeUTF("Incorrect username or password !\n");
-            this.bufferedWriter.write("Re-Enter your username:");
+            writeToClient("Incorrect username or password !");
+            message = "Re-Enter your username:";
         }
 
+
+
         if (userServices.isAdmin(clientUsername)) {
-            adminProcesses();
+            while (true){
+                adminProcesses();
+            }
         } else {
             userProcesses();
         }
@@ -130,7 +129,9 @@ public class ClientHandler implements Runnable {
 
 
     public void userProcesses() throws IOException {
-        dataOutputStream.writeUTF("Success login ...\n" + "User processes: ");
+        writeToClient("\n" + "User processes: You can only read information from the system ... \n");
+
+
 
 
     }
@@ -139,107 +140,145 @@ public class ClientHandler implements Runnable {
 
     public void adminProcesses() throws IOException {
 
-        dataOutputStream.writeUTF("Success login ...\n" + "Admin processes: \n"
-                + "1. \"Get users\"\n"
+        writeToClient("Admin processes: \n"
+                + "1. \"Get user info\"\n"
                 + "2. \"Add new users\"\n"
                 + "3. \"Update user info\"\n"
                 + "4. \"Remove users\"\n"
-                + "Type (exactly) the process that you want in the query field:\n");
+                + "5. \"Assign task to user\"\n"
+                + "Type (exactly) the process that you want to execute:");
 
         String query =  bufferedReader.readLine();
 
         switch (query.toLowerCase().replace("\"" , "")){
-            case "get users":
-                dataOutputStream.writeUTF("\"Get users\": Type the user name in the field");
-                getUser();
+            case "get user info":
+                writeToClient("\"Get users\": Type the user name in the field");
+                getUserInfo();
                 break;
 
             case "add new users":
-                dataOutputStream.writeUTF("\"Add new users\": ");
-                addNewUser();
+                writeToClient("\"Add new users\": ");
+                createNewUser();
                 break;
 
             case "update user info":
-                dataOutputStream.writeUTF("\"Update user info\": ");
+                writeToClient("\"Update user info\": ");
                 updateUser();
                 break;
 
             case "remove users":
-                dataOutputStream.writeUTF("\"Remove users\": ");
-                removeUser();
+                writeToClient("\"Remove users\": ");
+                removeUser1();
                 break;
 
-        }
+            case "assign task to user":
+                writeToClient("\"Assign task to user:\"");
+                createTask();
+                break;
 
+            default :
+                writeToClient("Your input does not match any case, please try again");
+        }
     }
 
 
 
-    public void getUser() throws IOException {
+    public void getUserInfo() throws IOException {
 
-        String username = dataInputStream.readUTF();
-        String password = dataInputStream.readUTF();
-        String email = dataInputStream.readUTF();
+        writeToClient("Enter the username to see it's details");
 
-        User user = userServices.getUserByUserName(username);
-        if(user==null){
-            dataOutputStream.writeUTF("There is no user with this username: " +username);
-            return;
-        }
+        while (true) {
 
-        dataOutputStream.writeUTF("User info:\n" + "Username: " + username + "\n Email: " + user.getEmail() + "\nRegistration date: " + user.getRegisterDate());
-    }
-
-
-
-    public void addNewUser() throws IOException {
-
-        while (true){
-            this.bufferedWriter.write("Enter the username for the new user: ");
-            this.bufferedWriter.newLine();
-            this.bufferedWriter.flush();
             String username = this.bufferedReader.readLine();
-
-            this.bufferedWriter.write("Enter the password for the new user: ");
-            this.bufferedWriter.newLine();
-            this.bufferedWriter.flush();
-            String password = this.bufferedReader.readLine();
-
-            this.bufferedWriter.write("Enter the email for the new user: ");
-            this.bufferedWriter.newLine();
-            this.bufferedWriter.flush();
-            String email = this.bufferedReader.readLine();
-
             User user = userServices.getUserByUserName(username);
-            if(user==null){
-                dataOutputStream.writeUTF("There is no user with this username: " + username);
+            if (user == null) {
+                writeToClient("There is no user with this username: " + username);
+                writeToClient("Re-enter the username to see the details");
                 continue;
             }
 
-            this.bufferedWriter.write("Here are the user details: \n Username: "+ user.getUsername()+ "\n Email: " + user.getEmail() +"\nEnter the email that you are going to update: ");
-            this.bufferedWriter.newLine();
-            this.bufferedWriter.flush();
-//            String email = this.bufferedReader.readLine();
-
-            dataOutputStream.writeUTF("successfully update user with username \""+ username +"\"\n");
+            writeToClient("User info:\n" + "Username: " + username + "\nEmail: " + user.getEmail() + "\nRegistration date: " + user.getRegisterDate());
             break;
         }
 
+        writeToClient("Now the processes for getting a user has finished, you can choose another options...");
+    }
 
-        String username = dataInputStream.readUTF();
-        String password = dataInputStream.readUTF();
-        String email = dataInputStream.readUTF();
 
-        if(username.equals("") || password.equals("") || email.equals("")){
-            dataOutputStream.writeUTF("Please fill all fields !");
-            return;
+
+    public void createNewUser() throws IOException {
+
+        String message ="Enter the username for the new user: ";
+        while (true){
+
+            writeToClient(message);
+            String username = this.bufferedReader.readLine();
+
+            User user = userServices.getUserByUserName(username);
+
+            if(user!=null){
+                writeToClient("This username already exist !!");
+                message ="Re-enter the username for the new user";
+                continue;
+            }
+
+            writeToClient("Enter the password for the new user: ");
+            String password = this.bufferedReader.readLine();
+
+            writeToClient("Enter the email for the new user: ");
+            String email = this.bufferedReader.readLine();
+
+            if(username.equals("") || password.equals("") || email.equals("")){
+                writeToClient("You need to fill all the fields");
+                message = "Re-enter the username for the new user";
+                continue;
+            }
+
+            userServices.createUser(new User(LocalDateTime.now() , username , password , email));
+            writeToClient("Successfully create a new user with username: '" + username + "'\n");
+            writeToClient("Now the processes for create a new user has finished, you can choose another options...");
+
+            break;
         }
 
-        long newUserId = userServices.getAllUsers().size();
-        User user = new User(newUserId , LocalDateTime.now() , username , password , email);
+    }
 
-        userServices.createUser(user);
-        dataOutputStream.writeUTF("A new user with username \"" + username + "\" was created ...");
+
+    public void createTask() throws IOException{
+
+        String message ="Enter a username to assign task to it: ";
+        while (true){
+
+            writeToClient(message);
+            String username = this.bufferedReader.readLine();
+
+            User user = userServices.getUserByUserName(username);
+
+            if(user == null){
+                writeToClient("This username not exist !!");
+                message ="Re-enter the username for a new task";
+                continue;
+            }
+
+            writeToClient("Enter the subject for the task: ");
+            String subject = this.bufferedReader.readLine();
+
+            writeToClient("Enter the description for the task: ");
+            String description = this.bufferedReader.readLine();
+
+            if(username.equals("") || subject.equals("") || description.equals("")){
+                writeToClient("You need to fill all the fields");
+                message = "Re-enter the username for the task:";
+                continue;
+            }
+
+            userServices.createTask(new Task(subject , description , user));
+
+            writeToClient("Successfully assigned a task for the user: '" + username + "'\n");
+            writeToClient("Now the processes for create a task has finished, you can choose another options...");
+
+            break;
+        }
 
     }
 
@@ -248,67 +287,94 @@ public class ClientHandler implements Runnable {
     public void updateUser() throws IOException {
 
         while (true){
-            this.bufferedWriter.write("Enter the username that you are going to update: ");
-            this.bufferedWriter.newLine();
-            this.bufferedWriter.flush();
+            writeToClient("Enter the username that you are going to update: ");
             String username = this.bufferedReader.readLine();
 
             User user = userServices.getUserByUserName(username);
             if(user==null){
-                dataOutputStream.writeUTF("There is no user with this username: " + username + "\n");
+                writeToClient("There is no user with this username: " + username + "\n");
                 continue;
             }
 
-            this.bufferedWriter.write("Here are the user details: \n Username: "+ user.getUsername()+ "\n Email: " + user.getEmail() +"\nEnter the email that you are going to update: ");
-            this.bufferedWriter.newLine();
-            this.bufferedWriter.flush();
+            writeToClient("Here are the user details: \n Username: "+ user.getUsername()+ "\n Email: " + user.getEmail() +"\nEnter the email that you are going to update: ");
             String email = this.bufferedReader.readLine();
 
+            if(email.equals("")){
+                writeToClient("You need to fill the email!!");
+                continue;
+            }
             user.setEmail(email);
 
             userServices.updateUser(user);
-            dataOutputStream.writeUTF("successfully update user with username \""+ username +"\"\n");
+            writeToClient("successfully update user with username \""+ username +"\"\n");
             break;
         }
 
-        this.bufferedWriter.write("Now you have to re-enter your details again to do more actions...\n \n");
-        this.bufferedWriter.newLine();
-        this.bufferedWriter.flush();
+        writeToClient("Now the processes of updating a user info has finished, you can choose another options...");
     }
 
 
 
-    public void removeUser() throws IOException {
+    public void removeUser1() throws IOException {
 
         while (true) {
-            this.bufferedWriter.write("Enter the username that you are going to remove: ");
-            this.bufferedWriter.newLine();
-            this.bufferedWriter.flush();
+            writeToClient("Enter the username that you are going to remove: ");
             String username = bufferedReader.readLine();
 
             User user = userServices.getUserByUserName(username);
             if (user == null) {
-                dataOutputStream.writeUTF("There is no user with this username: " + username);
+                writeToClient("There is no user with this username: " + username + "\n");
                 continue;
             }
 
-            userServices.deleteUser(user);
-            dataOutputStream.writeUTF("successfully delete user with username \" " + username +" \"...\n");
+            userServices.removeUser(user);
+            writeToClient("successfully delete user with username \" " + username +" \"...\n");
             break;
         }
 
-        this.bufferedWriter.write("Now you have to re-enter your details again to do more actions...\n \n");
-        this.bufferedWriter.newLine();
-        this.bufferedWriter.flush();
+        writeToClient("Now the processes of removing a user has finished, you can choose another options...");
+
+    }
+
+
+    public void removeUser2() throws IOException {
+
+        while (true) {
+            writeToClient("Enter the username that you are going to remove: ");
+            String username = bufferedReader.readLine();
+
+            User user = userServices.getUserByUserName(username);
+            if (user == null) {
+                writeToClient("There is no user with this username: " + username + "\n");
+                continue;
+            }
+
+            userServices.removeUser(user);
+            writeToClient("successfully delete user with username \" " + username +" \"...\n");
+            break;
+        }
+
+        writeToClient("Now the processes of removing a user has finished, you can choose another options...");
+
     }
 
 
 
-    public void removeClientHandler() throws IOException { //if the user left the chat.
-
+    public void removeClientHandler() throws IOException { //if the user left the website.
         clientHandlerList.remove(this);
         sendMessageToClients("SERVER: " + clientUsername + " has left the chat!");
+    }
 
+
+    public void writeToClient(String message){
+        try {
+            this.bufferedWriter.write(message );
+            this.bufferedWriter.newLine();
+            this.bufferedWriter.flush();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
