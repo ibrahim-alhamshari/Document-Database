@@ -1,0 +1,2 @@
+{"id":1,"subject":"reading","description":"some details","user":{"id":6,"registerDate":{"date":{"year":2022,"month":1,"day":12},"time":{"hour":23,"minute":12,"second":45,"nano":530000000}},"username":"Loay","password":"12345","email":"omar@gmail.com"}}
+{"id":2,"subject":"washing the car","description":"Please loay go to the center and wash the car","user":{"id":6,"registerDate":{"date":{"year":2022,"month":1,"day":12},"time":{"hour":23,"minute":12,"second":45,"nano":530000000}},"username":"Loay","password":"12345","email":"omar@gmail.com"}}

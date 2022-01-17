@@ -7,9 +7,9 @@ import java.net.Socket;
 import java.time.LocalDateTime;
 import java.util.*;
 
-public class ClientHandler implements Runnable {
+public class ServerHandler implements Runnable {
 
-    public static List<ClientHandler> clientHandlerList = new ArrayList<>();
+    public static List<ServerHandler> serverHandlerList = new ArrayList<>();
     public static Queue queue = new LinkedList() ;
 
     private Socket socket;
@@ -22,7 +22,7 @@ public class ClientHandler implements Runnable {
     private UserService userServices;
 
 
-    public ClientHandler(Socket socket) throws IOException {
+    public ServerHandler(Socket socket) throws IOException {
 
         this.socket = socket;
 
@@ -36,7 +36,7 @@ public class ClientHandler implements Runnable {
         dataInputStream = new DataInputStream(socket.getInputStream());
 
         userServices = UserService.getInstance();
-        clientHandlerList.add(this);
+        serverHandlerList.add(this);
 
     }
 
@@ -66,15 +66,13 @@ public class ClientHandler implements Runnable {
 
     public void sendMessageToClients(String messageToClients) throws IOException {
 
-
-
-        for (ClientHandler clientHandler : clientHandlerList) {
+        for (ServerHandler serverHandler : serverHandlerList) {
             if(Objects.nonNull(this.clientUsername)) {
 
-                if (!clientHandler.clientUsername.equals(this.clientUsername)) {
-                    clientHandler.bufferedWriter.write(messageToClients);
-                    clientHandler.bufferedWriter.newLine();
-                    clientHandler.bufferedWriter.flush();
+                if (!serverHandler.clientUsername.equals(this.clientUsername)) {
+                    serverHandler.bufferedWriter.write(messageToClients);
+                    serverHandler.bufferedWriter.newLine();
+                    serverHandler.bufferedWriter.flush();
                 }
 
             }
@@ -117,11 +115,11 @@ public class ClientHandler implements Runnable {
 
 
         if (userServices.isAdmin(clientUsername)) {
-            while (true){
+            while (true)
                 adminProcesses();
-            }
         } else {
-            userProcesses();
+            while (true)
+                userProcesses();
         }
 
     }
@@ -129,11 +127,8 @@ public class ClientHandler implements Runnable {
 
 
     public void userProcesses() throws IOException {
-        writeToClient("\n" + "User processes: You can only read information from the system ... \n");
-
-
-
-
+        writeToClient("\n" + "User processes: You can only read information about users from the system ...\n");
+        getUserInfo();
     }
 
 
@@ -152,7 +147,7 @@ public class ClientHandler implements Runnable {
 
         switch (query.toLowerCase().replace("\"" , "")){
             case "get user info":
-                writeToClient("\"Get users\": Type the user name in the field");
+                writeToClient("\"Get user info\": ");
                 getUserInfo();
                 break;
 
@@ -185,7 +180,7 @@ public class ClientHandler implements Runnable {
 
     public void getUserInfo() throws IOException {
 
-        writeToClient("Enter the username to see it's details");
+        writeToClient("Write any username to get information about it:");
 
         while (true) {
 
@@ -197,7 +192,20 @@ public class ClientHandler implements Runnable {
                 continue;
             }
 
+            List<Task> userTasks = userServices.getUserTasks(username);
+
             writeToClient("User info:\n" + "Username: " + username + "\nEmail: " + user.getEmail() + "\nRegistration date: " + user.getRegisterDate());
+
+            if(userTasks.size()>0){
+                writeToClient("\nHere are the tasks for "+username+ ":");
+            }
+
+            for (Task task: userTasks){
+                writeToClient("Subject: " +task.getSubject());
+                writeToClient("Details: " + task.getDescription());
+                writeToClient("\n");
+            }
+
             break;
         }
 
@@ -361,7 +369,7 @@ public class ClientHandler implements Runnable {
 
 
     public void removeClientHandler() throws IOException { //if the user left the website.
-        clientHandlerList.remove(this);
+        serverHandlerList.remove(this);
         sendMessageToClients("SERVER: " + clientUsername + " has left the chat!");
     }
 

@@ -1,16 +1,6 @@
-import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.scene.Scene;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextArea;
-import javafx.stage.Stage;
-import services.UserService;
-
 import java.io.*;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.time.LocalDateTime;
 import java.util.Objects;
 
 
@@ -36,8 +26,8 @@ public class Server {
                 socket = serverSocket.accept();
 
                 System.out.println("A new client has connected!");
-                ClientHandler clientHandler = new ClientHandler(socket);
-                Thread thread = new Thread(clientHandler);
+                ServerHandler serverHandler = new ServerHandler(socket);
+                Thread thread = new Thread(serverHandler);
                 thread.start();
 
             }

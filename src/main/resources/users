@@ -7,3 +7,4 @@
 {"id":7,"registerDate":{"date":{"year":2022,"month":1,"day":16},"time":{"hour":20,"minute":2,"second":33,"nano":623000000}},"username":"nader","password":"12345","email":"nader@gmail.com"}
 {"id":8,"registerDate":{"date":{"year":2022,"month":1,"day":16},"time":{"hour":20,"minute":8,"second":57,"nano":494000000}},"username":"rami","password":"12345","email":"rami@gmail.com"}
 {"id":9,"registerDate":{"date":{"year":2022,"month":1,"day":14},"time":{"hour":9,"minute":4,"second":19,"nano":305000000}},"username":"Admin","password":"admin","email":"admin@gmail.com"}
+{"id":10,"registerDate":{"date":{"year":2022,"month":1,"day":17},"time":{"hour":23,"minute":20,"second":12,"nano":563000000}},"username":"azez","password":"1234","email":"sadg@gmail.com"}
