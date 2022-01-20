@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -47,9 +48,7 @@ public class UserService {  // singleton pattern
     }
 
 
-    public List<Task> getUserTasks(String username) throws FileNotFoundException {
-
-        List<Task> userTasks = new ArrayList<>();
+    public List<Task> getAllTasks(){
         taskList = new ArrayList<>();
 
         try (FileReader fileReader = new FileReader("src/main/resources/tasks")) {
@@ -65,6 +64,17 @@ public class UserService {  // singleton pattern
         }catch (IOException e){
             e.printStackTrace();
         }
+
+        return taskList;
+    }
+
+
+    public List<Task> getUserTasks(String username) throws FileNotFoundException {
+        if(Objects.isNull(taskList) && taskList.size()==0){
+            taskList =getAllTasks();
+        }
+
+        List<Task> userTasks = new ArrayList<>();
 
         taskList.forEach(task->{
             if(task.getUser().getUsername().equalsIgnoreCase(username)){

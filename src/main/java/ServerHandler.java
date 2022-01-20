@@ -1,5 +1,6 @@
 import model.Task;
 import model.User;
+import queue.Queue;
 import services.UserService;
 
 import java.io.*;
@@ -10,7 +11,7 @@ import java.util.*;
 public class ServerHandler implements Runnable {
 
     public static List<ServerHandler> serverHandlerList = new ArrayList<>();
-    public static Queue queue = new LinkedList() ;
+    public static Queue<String> queue= new Queue<String>();
 
     private Socket socket;
     private BufferedReader bufferedReader;
@@ -127,60 +128,84 @@ public class ServerHandler implements Runnable {
 
 
     public void userProcesses() throws IOException {
-        writeToClient("\n" + "User processes: You can only read information about users from the system ...\n");
-        getUserInfo();
+        writeToClient("\n" + "User processes: You can only read information about users from the system ...");
+        getUserInfoNode1();
     }
 
 
 
     public void adminProcesses() throws IOException {
+        boolean isAdmin =userServices.isAdmin(clientUsername);
 
-        writeToClient("Admin processes: \n"
-                + "1. \"Get user info\"\n"
-                + "2. \"Add new users\"\n"
-                + "3. \"Update user info\"\n"
-                + "4. \"Remove users\"\n"
-                + "5. \"Assign task to user\"\n"
-                + "Type (exactly) the process that you want to execute:");
+        if(isAdmin) {
+            writeToClient("Admin processes: \n"
+                    + "1. \"Get user info\"\n"
+                    + "2. \"Add new users\"\n"
+                    + "3. \"Update user info\"\n"
+                    + "4. \"Remove users\"\n"
+                    + "5. \"Assign task to user\"\n"
+                    + "Type (exactly) the process that you want to execute:");
 
-        String query =  bufferedReader.readLine();
+            String query = bufferedReader.readLine();
 
-        switch (query.toLowerCase().replace("\"" , "")){
-            case "get user info":
-                writeToClient("\"Get user info\": ");
-                getUserInfo();
-                break;
+            switch (query.toLowerCase().replace("\"", "")) {
+                case "get user info":
+                    writeToClient("\"Get user info\": ");
+                    while (true) {
+                        if (!queue.isContain("getUserInfoNode1")) {
+                            queue.enqueue("getUserInfoNode1");
+                            getUserInfoNode1();
+                            break;
+                        } else if (!queue.isContain("getUserInfoNode2")) {
+                            queue.enqueue("getUserInfoNode2");
+                            getUserInfoNode2();
+                            break;
+                        } else if (!queue.isContain("getUserInfoNode3")) {
+                            queue.enqueue("getUserInfoNode3");
+                            getUserInfoNode3();
+                            break;
+                        } else if (!queue.isContain("getUserInfoNode4")) {
+                            queue.enqueue("getUserInfoNode4");
+                            getUserInfoNode4();
+                            break;
+                        } else {
+                            queue.dequeue();
+                        }
+                    }
+                case "add new users":
+                    writeToClient("\"Add new users\": ");
+                    createNewUser();
+                    break;
 
-            case "add new users":
-                writeToClient("\"Add new users\": ");
-                createNewUser();
-                break;
+                case "update user info":
+                    writeToClient("\"Update user info\": ");
+                    updateUser();
+                    break;
 
-            case "update user info":
-                writeToClient("\"Update user info\": ");
-                updateUser();
-                break;
+                case "remove users":
+                    writeToClient("\"Remove users\": ");
+                    removeUser1();
+                    break;
 
-            case "remove users":
-                writeToClient("\"Remove users\": ");
-                removeUser1();
-                break;
+                case "assign task to user":
+                    writeToClient("\"Assign task to user:\"");
+                    createTask();
+                    break;
 
-            case "assign task to user":
-                writeToClient("\"Assign task to user:\"");
-                createTask();
-                break;
+                default:
+                    writeToClient("Your input does not match any case, please try again");
+            }
+        }else {
 
-            default :
-                writeToClient("Your input does not match any case, please try again");
+
         }
     }
 
 
 
-    public void getUserInfo() throws IOException {
+    public void getUserInfoNode1() throws IOException {
 
-        writeToClient("Write any username to get information about it:");
+        writeToClient("Write any username to get information about it1:");
 
         while (true) {
 
@@ -212,6 +237,111 @@ public class ServerHandler implements Runnable {
         writeToClient("Now the processes for getting a user has finished, you can choose another options...");
     }
 
+
+    public void getUserInfoNode2() throws IOException {
+
+        writeToClient("Write any username to get information about it2:");
+
+        while (true) {
+
+            String username = this.bufferedReader.readLine();
+            User user = userServices.getUserByUserName(username);
+            if (user == null) {
+                writeToClient("There is no user with this username: " + username);
+                writeToClient("Re-enter the username to see the details");
+                continue;
+            }
+
+            List<Task> userTasks = userServices.getUserTasks(username);
+
+            writeToClient("User info:\n" + "Username: " + username + "\nEmail: " + user.getEmail() + "\nRegistration date: " + user.getRegisterDate());
+
+            if(userTasks.size()>0){
+                writeToClient("\nHere are the tasks for "+username+ ":");
+            }
+
+            for (Task task: userTasks){
+                writeToClient("Subject: " +task.getSubject());
+                writeToClient("Details: " + task.getDescription());
+                writeToClient("\n");
+            }
+
+            break;
+        }
+
+        writeToClient("Now the processes for getting a user has finished, you can choose another options...");
+    }
+
+
+
+    public void getUserInfoNode3() throws IOException {
+
+        writeToClient("Write any username to get information about it3:");
+
+        while (true) {
+
+            String username = this.bufferedReader.readLine();
+            User user = userServices.getUserByUserName(username);
+            if (user == null) {
+                writeToClient("There is no user with this username: " + username);
+                writeToClient("Re-enter the username to see the details");
+                continue;
+            }
+
+            List<Task> userTasks = userServices.getUserTasks(username);
+
+            writeToClient("User info:\n" + "Username: " + username + "\nEmail: " + user.getEmail() + "\nRegistration date: " + user.getRegisterDate());
+
+            if(userTasks.size()>0){
+                writeToClient("\nHere are the tasks for "+username+ ":");
+            }
+
+            for (Task task: userTasks){
+                writeToClient("Subject: " +task.getSubject());
+                writeToClient("Details: " + task.getDescription());
+                writeToClient("\n");
+            }
+
+            break;
+        }
+
+        writeToClient("Now the processes for getting a user has finished, you can choose another options...");
+    }
+
+
+    public void getUserInfoNode4() throws IOException {
+
+        writeToClient("Write any username to get information about it4:");
+
+        while (true) {
+
+            String username = this.bufferedReader.readLine();
+            User user = userServices.getUserByUserName(username);
+            if (user == null) {
+                writeToClient("There is no user with this username: " + username);
+                writeToClient("Re-enter the username to see the details");
+                continue;
+            }
+
+            List<Task> userTasks = userServices.getUserTasks(username);
+
+            writeToClient("User info:\n" + "Username: " + username + "\nEmail: " + user.getEmail() + "\nRegistration date: " + user.getRegisterDate());
+
+            if(userTasks.size()>0){
+                writeToClient("\nHere are the tasks for "+username+ ":");
+            }
+
+            for (Task task: userTasks){
+                writeToClient("Subject: " +task.getSubject());
+                writeToClient("Details: " + task.getDescription());
+                writeToClient("\n");
+            }
+
+            break;
+        }
+
+        writeToClient("Now the processes for getting a user has finished, you can choose another options...");
+    }
 
 
     public void createNewUser() throws IOException {
