@@ -7,6 +7,7 @@ import java.io.*;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
 
 public class ServerHandler implements Runnable {
 
@@ -16,25 +17,19 @@ public class ServerHandler implements Runnable {
     private Socket socket;
     private BufferedReader bufferedReader;
     private BufferedWriter bufferedWriter;
-    private DataInputStream dataInputStream;
-    private DataOutputStream dataOutputStream;
     private String clientUsername;
-    private boolean isAdmin;
     private ServicesLayer servicesLayer;
 
 
     public ServerHandler(Socket socket) throws IOException {
 
         this.socket = socket;
-
         try {
             this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         }catch (IOException e){
             e.printStackTrace();
         }
-        dataOutputStream = new DataOutputStream(socket.getOutputStream());
-        dataInputStream = new DataInputStream(socket.getInputStream());
 
         servicesLayer = ServicesLayer.getInstance();
         serverHandlerList.add(this);
@@ -214,7 +209,7 @@ public class ServerHandler implements Runnable {
                     writeToClient("Your input does not match any case, please try again");
             }
         }else {
-            writeToClient("You can typ your name or any username to get info.");
+            writeToClient("You can type your name or any username to get info.");
             writeToClient("\"Get user info\": ");
             while (true) {
                 if (!queue.isContain("getUserInfoNode1")) {

@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 public class ServicesLayer {  // singleton pattern
@@ -19,7 +21,9 @@ public class ServicesLayer {  // singleton pattern
     private static List<User> userList = new ArrayList<>();
     private static List<Task> taskList = new ArrayList<>();
 
-    private ServicesLayer() {}
+    private ServicesLayer() {
+        System.out.println("An instance has created ...");
+    }
 
 
     public static ServicesLayer getInstance() {
@@ -30,6 +34,7 @@ public class ServicesLayer {  // singleton pattern
     public List<User> getAllUsers() {
 
         userList = new ArrayList<>();
+        //FileReader read the data one char by one, so I don't need it. I need to read line by line.
         try (FileReader fileReader = new FileReader("src/main/resources/users")) {
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             String line = null;
@@ -68,7 +73,7 @@ public class ServicesLayer {  // singleton pattern
     }
 
 
-    public List<Task> getUserTasks(String username) throws FileNotFoundException {
+    public List<Task> getUserTasks(String username) {
         if(Objects.isNull(taskList) || taskList.size()==0){
             taskList =getAllTasks();
         }
@@ -85,7 +90,7 @@ public class ServicesLayer {  // singleton pattern
     }
 
 
-    private void resetUsersSchema() throws FileNotFoundException {
+    private void resetUsersSchema() {
 
         File tmpFile = new File("src/main/resources/tmpUserFile");
         File oldFile = new File("src/main/resources/users");
