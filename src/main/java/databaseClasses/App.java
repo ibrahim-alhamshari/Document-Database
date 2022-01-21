@@ -1,22 +1,14 @@
 package databaseClasses;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import model.User;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import services.UserService;
+import services.ServicesLayer;
 
-import javax.swing.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 public class App implements Runnable{
 
@@ -25,15 +17,15 @@ public class App implements Runnable{
 
         Thread thread = new Thread(){
             public void run(){
-                UserService userService1 = UserService.getInstance();
-                System.out.println(userService1);
+                ServicesLayer servicesLayer1 = ServicesLayer.getInstance();
+                System.out.println(servicesLayer1);
             }
         };
 
         Thread thread2 = new Thread(){
             public void run(){
-                UserService userService2 = UserService.getInstance();
-                System.out.println(userService2);
+                ServicesLayer servicesLayer2 = ServicesLayer.getInstance();
+                System.out.println(servicesLayer2);
             }
         };
         thread.start();

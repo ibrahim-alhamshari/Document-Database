@@ -33,7 +33,7 @@ public class Client {
 
 
     private void closeEverything(Socket socket , BufferedWriter _bufferedWriter , BufferedReader _bufferedReader){
-        System.out.println("Everything is closed !!!!!!!!!!!!!!!!!!!!!!!");
+        System.out.println("THE SERVER HAS SHUTTING DOWN, YOU NEED TO RECONNECT AGAIN");
         try {
             if(bufferedWriter != null)
                 bufferedWriter.close();

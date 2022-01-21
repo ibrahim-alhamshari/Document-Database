@@ -13,17 +13,16 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-public class UserService {  // singleton pattern
+public class ServicesLayer {  // singleton pattern
 
-    private static UserService instance = new UserService();
+    private static ServicesLayer instance = new ServicesLayer();
     private static List<User> userList = new ArrayList<>();
     private static List<Task> taskList = new ArrayList<>();
 
-    private UserService() {
-    }
+    private ServicesLayer() {}
 
 
-    public static UserService getInstance() {
+    public static ServicesLayer getInstance() {
         return instance;
     }
 
@@ -39,7 +38,7 @@ public class UserService {  // singleton pattern
             while ((line = bufferedReader.readLine()) != null) {
 
                 User data = gson.fromJson(line, User.class);
-                userList.add(gson.fromJson(line, User.class));
+                userList.add(data);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -70,7 +69,7 @@ public class UserService {  // singleton pattern
 
 
     public List<Task> getUserTasks(String username) throws FileNotFoundException {
-        if(Objects.isNull(taskList) && taskList.size()==0){
+        if(Objects.isNull(taskList) || taskList.size()==0){
             taskList =getAllTasks();
         }
 

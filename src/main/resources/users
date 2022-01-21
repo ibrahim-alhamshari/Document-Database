@@ -1,10 +1,3 @@
-{"id":1,"registerDate":{"date":{"year":2022,"month":1,"day":14},"time":{"hour":9,"minute":4,"second":19,"nano":305000000}},"username":"Admin","password":"admin","email":"admin@gmail.com"}
-{"id":2,"registerDate":{"date":{"year":2022,"month":1,"day":14},"time":{"hour":9,"minute":4,"second":19,"nano":305000000}},"username":"Admin","password":"admin","email":"admin@gmail.com"}
-{"id":3,"registerDate":{"date":{"year":2022,"month":1,"day":12},"time":{"hour":23,"minute":12,"second":45,"nano":530000000}},"username":"Omar","password":"12345","email":"omar@gmail.com"}
-{"id":4,"registerDate":{"date":{"year":2022,"month":1,"day":14},"time":{"hour":9,"minute":4,"second":19,"nano":305000000}},"username":"Admin","password":"admin","email":"admin@gmail.com"}
-{"id":5,"registerDate":{"date":{"year":2022,"month":1,"day":12},"time":{"hour":23,"minute":12,"second":45,"nano":530000000}},"username":"Omar","password":"12345","email":"omar@gmail.com"}
+{"id":1,"registerDate":{"date":{"year":2022,"month":1,"day":14},"time":{"hour":9,"minute":4,"second":19,"nano":305000000}},"username":"Admin","password":"12345","email":"admin@gmail.com"}
 {"id":6,"registerDate":{"date":{"year":2022,"month":1,"day":12},"time":{"hour":23,"minute":12,"second":45,"nano":530000000}},"username":"Loay","password":"12345","email":"omar@gmail.com"}
-{"id":7,"registerDate":{"date":{"year":2022,"month":1,"day":16},"time":{"hour":20,"minute":2,"second":33,"nano":623000000}},"username":"nader","password":"12345","email":"nader@gmail.com"}
-{"id":8,"registerDate":{"date":{"year":2022,"month":1,"day":16},"time":{"hour":20,"minute":8,"second":57,"nano":494000000}},"username":"rami","password":"12345","email":"rami@gmail.com"}
-{"id":9,"registerDate":{"date":{"year":2022,"month":1,"day":14},"time":{"hour":9,"minute":4,"second":19,"nano":305000000}},"username":"Admin","password":"admin","email":"admin@gmail.com"}
-{"id":10,"registerDate":{"date":{"year":2022,"month":1,"day":17},"time":{"hour":23,"minute":20,"second":12,"nano":563000000}},"username":"azez","password":"1234","email":"sadg@gmail.com"}
+{"id":3,"registerDate":{"date":{"year":2022,"month":1,"day":20},"time":{"hour":23,"minute":24,"second":41,"nano":627000000}},"username":"Khaled","password":"12345","email":"khaled@gmail.com"}
