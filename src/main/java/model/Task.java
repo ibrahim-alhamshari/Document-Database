@@ -9,6 +9,11 @@ public class Task {
 
     public Task(){}
 
+    public Task(String subject , String description){
+        this.subject=subject;
+        this.description=description;
+    }
+
     public Task(String subject , String description , User user){
         this.subject = subject;
         this.description =description;
@@ -51,10 +56,10 @@ public class Task {
     @Override
     public String toString() {
         return "{" +
-                "id='" + id + '\'' +
-                ", subject='" + subject + '\'' +
-                ", description='" + description + '\'' +
-                ", user=" + user +
+                "id='" + getId() + '\'' +
+                ", subject='" + getSubject() + '\'' +
+                ", description='" + getDescription() + '\'' +
+                ", user=" + getUser() +
                 '}';
     }
 }

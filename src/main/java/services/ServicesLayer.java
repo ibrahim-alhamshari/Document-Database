@@ -152,8 +152,8 @@ public class ServicesLayer {  // singleton pattern
     }
 
 
-    public boolean isAdmin(String username) {
-        return username.equalsIgnoreCase("admin");
+    public boolean isAdmin(User user) {
+        return user.getRole().equals(User.Role.ADMIN);
     }
 
 
@@ -171,6 +171,9 @@ public class ServicesLayer {  // singleton pattern
         long lines = 0;
         lines = Files.lines(Paths.get("src/main/resources/users")).count() + 1;
         newUser.setId(lines);
+        if(newUser.getPassword()==null){
+            newUser.setPassword("admin");
+        }
         userList.add(newUser);
         resetUsersSchema();
 

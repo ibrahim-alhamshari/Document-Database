@@ -100,8 +100,8 @@ public class ServerHandler implements Runnable {
 
             if (isUserFound) {
                 this.clientUsername = username;
-
-                if(servicesLayer.isAdmin(this.clientUsername) && password.equals("admin")){
+                User user = servicesLayer.getUserByUserName(username);
+                if(servicesLayer.isAdmin(user) && password.equals("admin")){
                     changeAdminPassword(password);
                 }
 
@@ -148,12 +148,13 @@ public class ServerHandler implements Runnable {
 
     public void masterNode() throws IOException {
 
-        boolean isAdmin = servicesLayer.isAdmin(clientUsername);
+        User user = servicesLayer.getUserByUserName(clientUsername);
+        boolean isAdmin = servicesLayer.isAdmin(user);
 
         if(isAdmin) {
             writeToClient("Admin processes: \n"
                     + "1. \"Get user info\"\n"
-                    + "2. \"Add new users\"\n"
+                    + "2. \"Add new user\"\n"
                     + "3. \"Update user info\"\n"
                     + "4. \"Remove users\"\n"
                     + "5. \"Assign task to user\"\n"
@@ -185,8 +186,10 @@ public class ServerHandler implements Runnable {
                             queue.dequeue();
                         }
                     }
-                case "add new users":
-                    writeToClient("\"Add new users\": ");
+                    break;
+
+                case "add new user":
+                    writeToClient("\"Add new user\": ");
                     createNewUser();
                     break;
 
@@ -253,7 +256,7 @@ public class ServerHandler implements Runnable {
 
             List<Task> userTasks = servicesLayer.getUserTasks(username);
 
-            writeToClient("User info:\n" + "Username: " + username + "\nEmail: " + user.getEmail() + "\nRegistration date: " + user.getRegisterDate());
+            writeToClient("User info:\n" + "Username: " + username +"\nRole: " + user.getRole()+ "\nEmail: " + user.getEmail() + "\nRegistration date: " + user.getRegisterDate());
 
             if(userTasks.size()>0){
                 writeToClient("\nHere are the tasks for "+username+ ":");
@@ -394,19 +397,41 @@ public class ServerHandler implements Runnable {
                 continue;
             }
 
-            writeToClient("Enter the password for the new user: ");
-            String password = this.bufferedReader.readLine();
+            writeToClient("Enter the role for the new user (ADMIN , USER): ");
+            String role = this.bufferedReader.readLine();
+
+            if(!role.equalsIgnoreCase("ADMIN") && !role.equalsIgnoreCase("USER")){
+                writeToClient("Incorrect user role. Fill the fields again");
+                message = "Re-enter the username for the new user";
+                continue;
+            }
+
+            String password=null;
+            if(!role.equalsIgnoreCase("ADMIN")){
+                writeToClient("Enter the password for the new user: ");
+                password  = this.bufferedReader.readLine();
+            }
+
 
             writeToClient("Enter the email for the new user: ");
             String email = this.bufferedReader.readLine();
 
-            if(username.equals("") || password.equals("") || email.equals("")){
+            if(username.equals("") || email.equals("")){
                 writeToClient("You need to fill all the fields");
                 message = "Re-enter the username for the new user";
                 continue;
             }
 
-            servicesLayer.createUser(new User(LocalDateTime.now() , username , password , email));
+
+            User _user = new User(LocalDateTime.now() , username , password , email);
+
+            if(role.equalsIgnoreCase("ADMIN")){
+                _user.setRole(User.Role.ADMIN);
+            }else {
+                _user.setRole(User.Role.USER);
+            }
+
+            servicesLayer.createUser(_user);
             writeToClient("Successfully create a new user with username: '" + username + "'\n");
             writeToClient("Now the processes for create a new user has finished, you can choose another options...\n********************************");
 
@@ -444,6 +469,14 @@ public class ServerHandler implements Runnable {
                 continue;
             }
 
+            Task task = new Task(subject , description , user);
+
+            List<Task> taskList = user.getTasks();
+            taskList.add(task);
+
+            user.setTasks(taskList);
+
+            servicesLayer.updateUser(user);
             servicesLayer.createTask(new Task(subject , description , user));
 
             writeToClient("Successfully assigned a task for the user: '" + username + "'\n");

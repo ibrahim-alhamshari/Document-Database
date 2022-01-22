@@ -52,38 +52,38 @@ public class Client {
 
 
     public void sendMessage(){
-        try {
-            Scanner scanner = new Scanner(System.in);
 
-            while (socket.isConnected()){
-                String messageToSend = scanner.nextLine();
-                bufferedWriter.write(messageToSend);
-                bufferedWriter.newLine();
-                bufferedWriter.flush();
-            }
+       new Thread(()->{
+           try {
+               Scanner scanner = new Scanner(System.in);
 
-        }catch (IOException e){
-           closeEverything(socket , bufferedWriter , bufferedReader);
-        }
+               while (socket.isConnected()){
+                   String messageToSend = scanner.nextLine();
+                   bufferedWriter.write(messageToSend);
+                   bufferedWriter.newLine();
+                   bufferedWriter.flush();
+               }
+
+           }catch (IOException e){
+               closeEverything(socket , bufferedWriter , bufferedReader);
+           }
+       }).start();
+
     }
 
 
     public void listenForMessage(){
 
-        new Thread(new Runnable() {
+        new Thread(() -> {
+            String msgFromServer;
 
-            @Override
-            public void run() {
-                String msgFromServer;
-
-                while (socket.isConnected()){
-                    try {
-                        msgFromServer = bufferedReader.readLine();
-                        System.out.println(msgFromServer);
-                    } catch (IOException e) {
-                       closeEverything(socket , bufferedWriter , bufferedReader);
-                       break;
-                    }
+            while (socket.isConnected()){
+                try {
+                    msgFromServer = bufferedReader.readLine();
+                    System.out.println(msgFromServer);
+                } catch (IOException e) {
+                   closeEverything(socket , bufferedWriter , bufferedReader);
+                   break;
                 }
             }
         }).start();

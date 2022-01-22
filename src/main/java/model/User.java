@@ -3,6 +3,8 @@ package model;
 import sun.security.util.Password;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class User {
 
@@ -11,15 +13,24 @@ public class User {
     private String username;
     private String password;
     private String email;
+    private List<Task> tasks;
+    private Role role;
 
     public User() {
     }
 
-    public User(LocalDateTime registerDate, String username, String password, String email) {
+    public User(LocalDateTime registerDate, String username, String password, String email ) {
         this.registerDate = registerDate;
         this.username = username;
         this.password = password;
         this.email = email;
+        tasks= new ArrayList<>();
+    }
+
+
+    public enum Role{
+        ADMIN,
+        USER
     }
 
     public long getId() {
@@ -62,14 +73,44 @@ public class User {
         this.email = email;
     }
 
+    public List<Task> getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(List<Task> tasks) {
+        this.tasks = tasks;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
     @Override
     public String toString() {
-        return "{" +
-                "\"id\"=\"" + id +
-                "\", \"registerDate\"=\"" + registerDate +
-                "\", \"username\"=\"" + username  +
-                "\", \"password\"=\"" + password +
-                "\", \"email\"=\"" + email +
-                "\"}";
+        return "User{" +
+                "id=" + getId() +
+                ", registerDate=" + getRegisterDate() +
+                ", username='" + getUsername() + '\'' +
+                ", password='" + getPassword() + '\'' +
+                ", email='" + getEmail() + '\'' +
+                ", tasks=" + getTasks() +
+                ", role=" + getRole() +
+                '}';
     }
+
+
+    //    @Override
+//    public String toString() {
+//        return "{" +
+//                "\"id\"=\"" + id +
+//                "\", \"registerDate\"=\"" + registerDate +
+//                "\", \"username\"=\"" + username  +
+//                "\", \"password\"=\"" + password +
+//                "\", \"email\"=\"" + email +
+//                "\"}";
+//    }
 }
