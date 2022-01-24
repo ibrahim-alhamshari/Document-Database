@@ -96,18 +96,21 @@ public class ServicesLayer {  // singleton pattern
         File oldFile = new File("src/main/resources/users");
         Gson gson = new Gson();
 
-        try (FileWriter fileWriter = new FileWriter("src/main/resources/tmpUserFile", true)) {
+        try {
+            FileWriter fileWriter = new FileWriter("src/main/resources/tmpUserFile", true);
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 
             userList.forEach(item -> {
                 try {
-                    fileWriter.write(gson.toJson(item));
-                    fileWriter.write("\n");
-                    fileWriter.flush();
+                    bufferedWriter.write(gson.toJson(item));
+                    bufferedWriter.newLine();
+                    bufferedWriter.flush();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             });
 
+            bufferedWriter.close();
             fileWriter.close();
             oldFile.delete();
             tmpFile.renameTo(new File("src/main/resources/users"));
@@ -127,19 +130,24 @@ public class ServicesLayer {  // singleton pattern
         File oldFile = new File("src/main/resources/tasks");
         Gson gson = new Gson();
 
-        try (FileWriter fileWriter = new FileWriter("src/main/resources/tmpTaskFile")) {
+        try (FileWriter fileWriter = new FileWriter("src/main/resources/tmpTaskFile")){
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
             taskList.forEach(task -> {
                 try {
-                    fileWriter.write(gson.toJson(task));
-                    fileWriter.write("\n");
-                    fileWriter.flush();
+                    bufferedWriter.write(gson.toJson(task));
+                    bufferedWriter.newLine();
+                    bufferedWriter.flush();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             });
+
+            bufferedWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+
 
         oldFile.delete();
         tmpFile.renameTo(new File("src/main/resources/tasks"));

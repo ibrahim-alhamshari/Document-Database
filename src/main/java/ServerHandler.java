@@ -469,7 +469,7 @@ public class ServerHandler implements Runnable {
                 continue;
             }
 
-            Task task = new Task(subject , description , user);
+            Task task = new Task(subject , description);
 
             List<Task> taskList = user.getTasks();
             taskList.add(task);
@@ -477,7 +477,7 @@ public class ServerHandler implements Runnable {
             user.setTasks(taskList);
 
             servicesLayer.updateUser(user);
-            servicesLayer.createTask(new Task(subject , description , user));
+            servicesLayer.createTask(new Task(subject , description));
 
             writeToClient("Successfully assigned a task for the user: '" + username + "'\n");
             writeToClient("Now the processes for create a task has finished, you can choose another options...\n ********************************");

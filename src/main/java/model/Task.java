@@ -9,15 +9,11 @@ public class Task {
 
     public Task(){}
 
-    public Task(String subject , String description){
-        this.subject=subject;
-        this.description=description;
-    }
 
-    public Task(String subject , String description , User user){
+    public Task(String subject , String description){
         this.subject = subject;
         this.description =description;
-        this.user=user;
+        user = new User();
     }
 
     public long getId() {
@@ -44,22 +40,20 @@ public class Task {
         this.description = description;
     }
 
-    public User getUser() {
+    public model.User getUser() {
         return user;
     }
 
-    public void setUser(User user) {
+    public void setUser(model.User user) {
         this.user = user;
     }
 
-
     @Override
     public String toString() {
-        return "{" +
-                "id='" + getId() + '\'' +
-                ", subject='" + getSubject() + '\'' +
-                ", description='" + getDescription() + '\'' +
-                ", user=" + getUser() +
+        return "Task{" +
+                "id=" + id +
+                ", subject='" + subject + '\'' +
+                ", description='" + description + '\'' +
                 '}';
     }
 }
