@@ -1,8 +1,7 @@
 import org.junit.jupiter.api.Test;
 import queue.Queue;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class QueueTest {
 
@@ -39,10 +38,10 @@ public class QueueTest {
         queue.enqueue(81);
         queue.enqueue(5);
 
-        assertEquals(true , queue.isContain(81));
-        assertEquals(false , queue.isContain(10));
-        assertEquals(true , queue.isContain(6));
-        assertEquals(false , queue.isContain(1));
+        assertTrue(queue.isContain(81));
+        assertFalse(queue.isContain(10));
+        assertTrue(queue.isContain(6));
+        assertFalse(queue.isContain(1));
     }
 
 
@@ -53,11 +52,11 @@ public class QueueTest {
         queue.enqueue("Khaled");
         queue.enqueue("Waleed");
 
-        assertEquals(false , queue.isEmpty());
+        assertFalse(queue.isEmpty());
         queue.dequeue();
         queue.dequeue();
-        assertEquals(false , queue.isEmpty());
+        assertFalse(queue.isEmpty());
         queue.dequeue();
-        assertEquals(true , queue.isEmpty());
+        assertTrue(queue.isEmpty());
     }
 }

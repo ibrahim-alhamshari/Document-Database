@@ -11,8 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class ServicesLayer {  // singleton pattern
@@ -78,15 +77,15 @@ public class ServicesLayer {  // singleton pattern
             taskList =getAllTasks();
         }
 
-        List<Task> userTasks = new ArrayList<>();
+        AtomicReference<List<Task>> userTasks = new AtomicReference<>();
 
-        taskList.forEach(task->{
-            if(task.getUser().getUsername().equalsIgnoreCase(username)){
-                userTasks.add(task);
+        userList.forEach(user->{
+            if(user.getUsername().equalsIgnoreCase(username)){
+                userTasks.set(user.getTasks());
             }
         });
 
-        return userTasks;
+        return userTasks.get();
     }
 
 
