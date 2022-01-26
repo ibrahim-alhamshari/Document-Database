@@ -1,0 +1,1 @@
+{"id":1,"registerDate":{"date":{"year":2022,"month":1,"day":25},"time":{"hour":3,"minute":12,"second":40,"nano":790000000}},"username":"Ahmad","password":"1254","email":"ahmad@gmail.com","tasks":[{"id":0,"subject":"Reading","description":"I have some reading","user":{"id":0}},{"id":0,"subject":"Writing","description":"I have some writing","user":{"id":0}}]}

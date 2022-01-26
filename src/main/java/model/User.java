@@ -17,6 +17,7 @@ public class User {
     private Role role;
 
     public User() {
+
     }
 
     public User(LocalDateTime registerDate, String username, String password, String email ) {

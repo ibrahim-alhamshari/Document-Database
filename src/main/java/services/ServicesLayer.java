@@ -16,16 +16,25 @@ import java.util.stream.Collectors;
 
 public class ServicesLayer {  // singleton pattern
 
-    private static ServicesLayer instance = new ServicesLayer();
+    private static volatile ServicesLayer instance = null;
     private static List<User> userList = new ArrayList<>();
     private static List<Task> taskList = new ArrayList<>();
 
     private ServicesLayer() {
-        System.out.println("An instance has created ...");
+        System.out.println("An instance of \"ServicesLayer\" has created ...");
     }
 
 
     public static ServicesLayer getInstance() {
+
+        if(instance==null){
+            synchronized (ServicesLayer.class){
+                if(instance==null){
+                    instance = new ServicesLayer();
+                }
+            }
+        }
+
         return instance;
     }
 
@@ -33,14 +42,20 @@ public class ServicesLayer {  // singleton pattern
     public List<User> getAllUsers() {
 
         userList = new ArrayList<>();
+
         //FileReader read the data one char by one, so I don't need it. I need to read line by line.
-        try (FileReader fileReader = new FileReader("src/main/resources/users")) {
+        try (FileReader fileReader = new FileReader("src/main/resources/database/users")) {
+
+            //Initialize bufferedReader
             BufferedReader bufferedReader = new BufferedReader(fileReader);
+            //Create a string to hold the JSON string in each line.
             String line = null;
             Gson gson = new Gson();
 
+            //loop through the lines while there are a lines in the DB.
             while ((line = bufferedReader.readLine()) != null) {
 
+                //Convert the JSON string to a JSON object and add them to the list.
                 User data = gson.fromJson(line, User.class);
                 userList.add(data);
             }
@@ -54,7 +69,7 @@ public class ServicesLayer {  // singleton pattern
     public List<Task> getAllTasks(){
         taskList = new ArrayList<>();
 
-        try (FileReader fileReader = new FileReader("src/main/resources/tasks")) {
+        try (FileReader fileReader = new FileReader("src/main/resources/database/tasks")) {
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             String line =null;
             Gson gson = new Gson();
@@ -91,19 +106,29 @@ public class ServicesLayer {  // singleton pattern
 
     private void resetUsersSchema() {
 
-        File tmpFile = new File("src/main/resources/tmpUserFile");
-        File oldFile = new File("src/main/resources/users");
+        File tmpFile = new File("src/main/resources/database/tmpUserFile");
+        File oldFile = new File("src/main/resources/database/users");
         Gson gson = new Gson();
 
         try {
-            FileWriter fileWriter = new FileWriter("src/main/resources/tmpUserFile", true);
+            FileWriter fileWriter = new FileWriter("src/main/resources/database/tmpUserFile", true);
             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 
-            userList.forEach(item -> {
+            userList.forEach(user -> {
                 try {
-                    bufferedWriter.write(gson.toJson(item));
+
+                    //Converting user object to JSON string format
+                    String jsonData = gson.toJson(user);
+
+                    //Writing the JSON string to the text file
+                    bufferedWriter.write(jsonData);
+
+                    //used to separate the next line as a new line.
                     bufferedWriter.newLine();
+
+                    //flush the data from buffedWriter
                     bufferedWriter.flush();
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -112,7 +137,7 @@ public class ServicesLayer {  // singleton pattern
             bufferedWriter.close();
             fileWriter.close();
             oldFile.delete();
-            tmpFile.renameTo(new File("src/main/resources/users"));
+            tmpFile.renameTo(new File("src/main/resources/database/users"));
 
             userList = getAllUsers();
 
@@ -125,11 +150,11 @@ public class ServicesLayer {  // singleton pattern
 
 
     private void resetTaskSchema() {
-        File tmpFile = new File("src/main/resources/tmpTaskFile");
-        File oldFile = new File("src/main/resources/tasks");
+        File tmpFile = new File("src/main/resources/database/tmpTaskFile");
+        File oldFile = new File("src/main/resources/database/tasks");
         Gson gson = new Gson();
 
-        try (FileWriter fileWriter = new FileWriter("src/main/resources/tmpTaskFile")){
+        try (FileWriter fileWriter = new FileWriter("src/main/resources/database/tmpTaskFile")){
             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 
             taskList.forEach(task -> {
@@ -149,7 +174,7 @@ public class ServicesLayer {  // singleton pattern
 
 
         oldFile.delete();
-        tmpFile.renameTo(new File("src/main/resources/tasks"));
+        tmpFile.renameTo(new File("src/main/resources/database/tasks"));
     }
 
 
@@ -176,7 +201,7 @@ public class ServicesLayer {  // singleton pattern
     public void createUser(User newUser) throws IOException {
 
         long lines = 0;
-        lines = Files.lines(Paths.get("src/main/resources/users")).count() + 1;
+        lines = Files.lines(Paths.get("src/main/resources/database/users")).count() + 1;
         newUser.setId(lines);
         if(newUser.getPassword()==null){
             newUser.setPassword("admin");
@@ -189,7 +214,7 @@ public class ServicesLayer {  // singleton pattern
 
     public void createTask(Task newTask) throws IOException {
         long lines = 0;
-        lines = Files.lines(Paths.get("src/main/resources/tasks")).count() + 1;
+        lines = Files.lines(Paths.get("src/main/resources/database/tasks")).count() + 1;
         newTask.setId(lines);
         taskList.add(newTask);
         resetTaskSchema();
