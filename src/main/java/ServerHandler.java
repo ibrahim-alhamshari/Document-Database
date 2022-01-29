@@ -398,7 +398,7 @@ public class ServerHandler implements Runnable {
             Address address = user.getAddress();
 
             if(address != null){
-                writeToClient("Country: " + address.getCountry() + "\nCity: " +address.getCity() + "\npostalCode: " +address.getPostalCode());
+                writeToClient("Country: " + address.getCountry() + "\nCity: " +address.getCity() + "\nPostalCode: " +address.getPostalCode());
             }
 
             if(userTasks.size()>0){
@@ -416,7 +416,6 @@ public class ServerHandler implements Runnable {
 
         writeToClient("Now the processes for getting a user has finished, you can choose another options...\n********************************");
     }
-
 
 
     public void createNewUser() throws IOException {
@@ -482,7 +481,8 @@ public class ServerHandler implements Runnable {
                 role = User.Role.USER;
             }
 
-            User newUser= new User.Builder(username).password(password).role(role).email(email).build();
+            User newUser = new User(username , password , email , role);
+
 
             servicesLayer.createUser(newUser);
             writeToClient("Successfully create a new user with username: '" + username + "'\n");
@@ -531,6 +531,8 @@ public class ServerHandler implements Runnable {
 
             servicesLayer.updateUser(user);
 
+            informClientByChanges(user.getUsername());
+
             writeToClient("Successfully assigned a task for the user: '" + username + "'\n");
             writeToClient("Now the processes for create a task has finished, you can choose another options...\n ********************************");
 
@@ -539,7 +541,6 @@ public class ServerHandler implements Runnable {
         }
 
     }
-
 
 
     public void updateUserInfo() throws IOException {
@@ -569,6 +570,8 @@ public class ServerHandler implements Runnable {
 
             servicesLayer.updateUser(user);
             writeToClient("successfully update user with username \""+ username +"\"\n");
+            informClientByChanges(user.getUsername());
+
             break;
         }
 
@@ -620,6 +623,8 @@ public class ServerHandler implements Runnable {
 
             servicesLayer.removeUser(user);
             writeToClient("successfully delete user with username \" " + username +" \"...\n");
+            informClientByChanges(user.getUsername());
+
             break;
         }
 
@@ -655,6 +660,13 @@ public class ServerHandler implements Runnable {
     }
 
 
+    public void informClientByChanges(String _username){
+        serverHandlerList.forEach(e->{
+            if(e.clientUsername.equals(_username)){
+                e.writeToClient("Your data have updated");
+            }
+        });
+    }
 
 
 }

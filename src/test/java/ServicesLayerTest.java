@@ -15,8 +15,10 @@ public class ServicesLayerTest {
 
     @Test
     public void getUserByUserName() throws IOException {
+
         UserServices servicesLayer = UserServices.getInstance();
-        User user = new User.Builder("loay").password("#iva45#@*&").email("loay@gmail.com").build();
+
+        User user = new User("loay" , "#iva45#@*&" ,"loay@gmail.com" );
 
         servicesLayer.createUser(user);
 
@@ -25,13 +27,14 @@ public class ServicesLayerTest {
         assertEquals("loay@gmail.com" , servicesLayer.getUserByUserName("loay").getEmail());
     }
 
+
     @Test
     public void isUserFound() throws IOException {
         UserServices servicesLayer = UserServices.getInstance();
 
 
-        servicesLayer.createUser(new User.Builder("loay").password("#iva45#@*&").email("loay@gmail.com").build());
-        servicesLayer.createUser(new User.Builder("Waleed").password("jhw8#@5!lw").email("waleed@yahoo.com").build());
+        servicesLayer.createUser(new User("loay" , "#iva45#@*&" ,"loay@gmail.com" ));
+        servicesLayer.createUser(new User("Waleed" , "jhw8#@5!lw" ,"waleed@yahoo.com" ));
 
         assertTrue(servicesLayer.isUserFound("loay" , "#iva45#@*&"));
         assertFalse(servicesLayer.isUserFound("Ahmad", "565s3zkx"));
@@ -39,17 +42,18 @@ public class ServicesLayerTest {
         assertFalse(servicesLayer.isUserFound("loay" , "jt7!&8js"));
     }
 
+
     @Test
     public void isAdmin() throws IOException {
         UserServices servicesLayer = UserServices.getInstance();
 
-        User user1 = servicesLayer.createUser(new User.Builder("loay").password("#iva45#@*&").email("loay@gmail.com").build());
-        User user2 = servicesLayer.createUser(new User.Builder("Ahmad").password("123445").email("ahmad@gmail.com").build());
-        User user3 = servicesLayer.createUser(new User.Builder("Rami").password("rherve65f").email("rami@gmail.com").build());
+        User user1 = servicesLayer.createUser(new User("loay" , "#iva45#@*&" ,"loay@gmail.com" ));
+        User user2 = servicesLayer.createUser(new User("Ahmad" , "123445" ,"ahmad@gmail.com" ));
+        User user3 = servicesLayer.createUser(new User("Rami" , "rherve65f" ,"rami@gmail.com" ));
 
-//        user1.setRole(User.Role.ADMIN);
-//        user2.setRole(User.Role.USER);
-//        user3.setRole(User.Role.USER);
+        user1.setRole(User.Role.ADMIN);
+        user2.setRole(User.Role.USER);
+        user3.setRole(User.Role.USER);
 
         servicesLayer.createUser(user1);
         servicesLayer.createUser(user2);
@@ -74,6 +78,7 @@ public class ServicesLayerTest {
 
     @Test
     public void getUserTasks() throws IOException {
+
         UserServices servicesLayer= UserServices.getInstance();
 
         Task task1 = new Task("Reading" , "I have some reading");
@@ -82,8 +87,10 @@ public class ServicesLayerTest {
         List<Task> taskList =new ArrayList<>();
         taskList.add(task1);
         taskList.add(task2);
+        User user = servicesLayer.getUserByUserName("loay");
 
-        User user = servicesLayer.updateUser( new User.Builder("Ahmad").password("1254").email("ahmad@gmail.com").tasks(taskList).build());
+        user.setTasks(taskList);
+        servicesLayer.updateUser(user);
 
         assertEquals(taskList.toString() , user.getTasks().toString());
     }

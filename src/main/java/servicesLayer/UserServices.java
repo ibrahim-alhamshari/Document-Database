@@ -63,7 +63,7 @@ public final class UserServices {  // singleton pattern
 
 
 
-    private void saveChangesToDB() {
+    private void saveUserChangesToDB() {
 
         File tmpFile = new File("src/main/resources/database/tmpUserFile");
         File oldFile = new File("src/main/resources/database/users");
@@ -125,7 +125,7 @@ public final class UserServices {  // singleton pattern
         if (_user.size() > 0) {
             return _user.get(0);
         }
-        return null;
+        return new User();
     }
 
 
@@ -138,7 +138,7 @@ public final class UserServices {  // singleton pattern
             newUser.setPassword("admin");
         }
         userList.add(newUser);
-        saveChangesToDB();
+        saveUserChangesToDB();
 
         return newUser;
     }
@@ -153,7 +153,7 @@ public final class UserServices {  // singleton pattern
             }
         });
 
-        saveChangesToDB();
+        saveUserChangesToDB();
 
         return user;
     }
@@ -169,7 +169,7 @@ public final class UserServices {  // singleton pattern
 
         userList.stream().forEach(item ->item.setId(index.getAndIncrement()));
 
-        saveChangesToDB();
+        saveUserChangesToDB();
     }
 
 }
