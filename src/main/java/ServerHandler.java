@@ -1,13 +1,13 @@
+import model.Address;
 import model.Task;
 import model.User;
 import queue.Queue;
-import services.ServicesLayer;
+import servicesLayer.AddressServices;
+import servicesLayer.UserServices;
 
 import java.io.*;
 import java.net.Socket;
-import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.locks.Lock;
 
 public class ServerHandler implements Runnable {
 
@@ -18,7 +18,8 @@ public class ServerHandler implements Runnable {
     private BufferedReader bufferedReader;
     private BufferedWriter bufferedWriter;
     private String clientUsername;
-    private ServicesLayer servicesLayer;
+    private UserServices servicesLayer;
+    private AddressServices addressServices;
 
 
     public ServerHandler(Socket socket) throws IOException {
@@ -31,7 +32,8 @@ public class ServerHandler implements Runnable {
             e.printStackTrace();
         }
 
-        servicesLayer = ServicesLayer.getInstance();
+        servicesLayer = UserServices.getInstance();
+        addressServices = new AddressServices();
         serverHandlerList.add(this);
 
     }
@@ -116,6 +118,7 @@ public class ServerHandler implements Runnable {
         while (true){
             masterNode();
         }
+
     }
 
 
@@ -140,7 +143,6 @@ public class ServerHandler implements Runnable {
             }
 
         }
-
 
     }
 
@@ -195,7 +197,7 @@ public class ServerHandler implements Runnable {
 
                 case "update user info":
                     writeToClient("\"Update user info\": ");
-                    updateUser();
+                    updateUserInfo();
                     break;
 
                 case "remove users":
@@ -254,9 +256,18 @@ public class ServerHandler implements Runnable {
                 continue;
             }
 
-            List<Task> userTasks = servicesLayer.getUserTasks(username);
+            List<Task> userTasks = user.getTasks();
 
-            writeToClient("User info:\n" + "Username: " + username +"\nRole: " + user.getRole()+ "\nEmail: " + user.getEmail() + "\nRegistration date: " + user.getRegisterDate());
+            writeToClient("User info:\n" + "Username: " + username
+                    +"\nRole: " + user.getRole()
+                    + "\nEmail: " + user.getEmail()
+                    + "\nRegistration date: " + user.getRegisterDate());
+
+            Address address = user.getAddress();
+
+            if(address != null){
+                writeToClient("Country: " + address.getCountry() + "\nCity: " +address.getCity() + "\npostalCode: " +address.getPostalCode());
+            }
 
             if(userTasks.size()>0){
                 writeToClient("\nHere are the tasks for "+username+ ":");
@@ -289,9 +300,18 @@ public class ServerHandler implements Runnable {
                 continue;
             }
 
-            List<Task> userTasks = servicesLayer.getUserTasks(username);
+            List<Task> userTasks = user.getTasks();
 
-            writeToClient("User info:\n" + "Username: " + username + "\nEmail: " + user.getEmail() + "\nRegistration date: " + user.getRegisterDate());
+            writeToClient("User info:\n" + "Username: " + username
+                    +"\nRole: " + user.getRole()
+                    + "\nEmail: " + user.getEmail()
+                    + "\nRegistration date: " + user.getRegisterDate());
+
+            Address address = user.getAddress();
+
+            if(address != null){
+                writeToClient("Country: " + address.getCountry() + "\nCity: " +address.getCity() + "\npostalCode: " +address.getPostalCode());
+            }
 
             if(userTasks.size()>0){
                 writeToClient("\nHere are the tasks for "+username+ ":");
@@ -310,7 +330,6 @@ public class ServerHandler implements Runnable {
     }
 
 
-
     public void getUserInfoNode3() throws IOException {
 
         writeToClient("Write any username to get information about it (Node 3):");
@@ -325,9 +344,18 @@ public class ServerHandler implements Runnable {
                 continue;
             }
 
-            List<Task> userTasks = servicesLayer.getUserTasks(username);
+            List<Task> userTasks = user.getTasks();
 
-            writeToClient("User info:\n" + "Username: " + username + "\nEmail: " + user.getEmail() + "\nRegistration date: " + user.getRegisterDate());
+            writeToClient("User info:\n" + "Username: " + username
+                    +"\nRole: " + user.getRole()
+                    + "\nEmail: " + user.getEmail()
+                    + "\nRegistration date: " + user.getRegisterDate());
+
+            Address address = user.getAddress();
+
+            if(address != null){
+                writeToClient("Country: " + address.getCountry() + "\nCity: " +address.getCity() + "\npostalCode: " +address.getPostalCode());
+            }
 
             if(userTasks.size()>0){
                 writeToClient("\nHere are the tasks for "+username+ ":");
@@ -360,9 +388,18 @@ public class ServerHandler implements Runnable {
                 continue;
             }
 
-            List<Task> userTasks = servicesLayer.getUserTasks(username);
+            List<Task> userTasks = user.getTasks();
 
-            writeToClient("User info:\n" + "Username: " + username + "\nEmail: " + user.getEmail() + "\nRegistration date: " + user.getRegisterDate());
+            writeToClient("User info:\n" + "Username: " + username
+                    +"\nRole: " + user.getRole()
+                    + "\nEmail: " + user.getEmail()
+                    + "\nRegistration date: " + user.getRegisterDate());
+
+            Address address = user.getAddress();
+
+            if(address != null){
+                writeToClient("Country: " + address.getCountry() + "\nCity: " +address.getCity() + "\npostalCode: " +address.getPostalCode());
+            }
 
             if(userTasks.size()>0){
                 writeToClient("\nHere are the tasks for "+username+ ":");
@@ -381,6 +418,7 @@ public class ServerHandler implements Runnable {
     }
 
 
+
     public void createNewUser() throws IOException {
 
         String message ="Enter the username for the new user: ";
@@ -389,49 +427,64 @@ public class ServerHandler implements Runnable {
             writeToClient(message);
             String username = this.bufferedReader.readLine();
 
-            User user = servicesLayer.getUserByUserName(username);
+            User userFromDB = servicesLayer.getUserByUserName(username);
 
-            if(user!=null){
+            if(userFromDB!=null){
                 writeToClient("This username already exist !!");
                 message ="Re-enter the username for the new user";
                 continue;
-            }
-
-            writeToClient("Enter the role for the new user (ADMIN , USER): ");
-            String role = this.bufferedReader.readLine();
-
-            if(!role.equalsIgnoreCase("ADMIN") && !role.equalsIgnoreCase("USER")){
-                writeToClient("Incorrect user role. Fill the fields again");
-                message = "Re-enter the username for the new user";
-                continue;
-            }
-
-            String password=null;
-            if(!role.equalsIgnoreCase("ADMIN")){
-                writeToClient("Enter the password for the new user: ");
-                password  = this.bufferedReader.readLine();
             }
 
 
             writeToClient("Enter the email for the new user: ");
             String email = this.bufferedReader.readLine();
 
-            if(username.equals("") || email.equals("")){
+            if(username.equals("")|| email.equals("")){
                 writeToClient("You need to fill all the fields");
                 message = "Re-enter the username for the new user";
                 continue;
             }
 
 
-            User _user = new User(LocalDateTime.now() , username , password , email);
+            writeToClient("Enter the role for the new user (ADMIN , USER): ");
+            String roleString = this.bufferedReader.readLine();
 
-            if(role.equalsIgnoreCase("ADMIN")){
-                _user.setRole(User.Role.ADMIN);
-            }else {
-                _user.setRole(User.Role.USER);
+            if(!roleString.equalsIgnoreCase("ADMIN") && !roleString.equalsIgnoreCase("USER")){
+                writeToClient("Incorrect user role. Fill the fields again");
+                message = "Re-enter the username for the new user";
+                continue;
             }
 
-            servicesLayer.createUser(_user);
+            String password=null;
+
+            if(roleString.equalsIgnoreCase("USER")){
+                writeToClient("Enter the password for the new user: ");
+
+                while (true){
+                    password  = this.bufferedReader.readLine();
+
+                    if(password.length()>=8){
+                        break;
+                    }
+
+                    writeToClient("Very short password. Re-enter the password again");
+                }
+
+            }
+
+
+
+            User.Role role = null;
+
+            if(roleString.equalsIgnoreCase("ADMIN")){
+                role= User.Role.ADMIN;
+            }else {
+                role = User.Role.USER;
+            }
+
+            User newUser= new User.Builder(username).password(password).role(role).email(email).build();
+
+            servicesLayer.createUser(newUser);
             writeToClient("Successfully create a new user with username: '" + username + "'\n");
             writeToClient("Now the processes for create a new user has finished, you can choose another options...\n********************************");
 
@@ -477,7 +530,6 @@ public class ServerHandler implements Runnable {
             user.setTasks(taskList);
 
             servicesLayer.updateUser(user);
-            servicesLayer.createTask(new Task(subject , description));
 
             writeToClient("Successfully assigned a task for the user: '" + username + "'\n");
             writeToClient("Now the processes for create a task has finished, you can choose another options...\n ********************************");
@@ -490,7 +542,7 @@ public class ServerHandler implements Runnable {
 
 
 
-    public void updateUser() throws IOException {
+    public void updateUserInfo() throws IOException {
 
         while (true){
             writeToClient("Enter the username that you are going to update: ");
@@ -502,7 +554,8 @@ public class ServerHandler implements Runnable {
                 continue;
             }
 
-            writeToClient("Here are the user details: \n Username: "+ user.getUsername()+ "\n Email: " + user.getEmail() +"\nEnter the email that you are going to update: ");
+            writeToClient("Here are the user details: \n Username: "+ user.getUsername()
+                    + "\n Email: " + user.getEmail() +"\nEnter the email that you are going to update: ");
             String email = this.bufferedReader.readLine();
 
             if(email.equals("")){
@@ -510,6 +563,9 @@ public class ServerHandler implements Runnable {
                 continue;
             }
             user.setEmail(email);
+
+            Address address = updateUserAddress();
+            user.setAddress(address);
 
             servicesLayer.updateUser(user);
             writeToClient("successfully update user with username \""+ username +"\"\n");
@@ -519,6 +575,28 @@ public class ServerHandler implements Runnable {
         writeToClient("Now the processes of updating a user info has finished, you can choose another options...\n********************************");
     }
 
+
+    public Address updateUserAddress() throws IOException {
+
+        writeToClient("Update address. Select Address:");
+        List<Address> addresses = AddressServices.getAllAddresses();
+
+        while (true) {
+            for (Address address : addresses) {
+                writeToClient(address.getCountry());
+            }
+
+            String country = this.bufferedReader.readLine();
+            Address address = addressServices.getAddressByCountryName(country);
+
+            if (address == null) {
+                writeToClient("Incorrect country name. \nSelect an address again");
+                continue;
+            }
+
+            return address;
+        }
+    }
 
 
     public void removeUser() throws IOException {
@@ -575,6 +653,8 @@ public class ServerHandler implements Runnable {
             }
         });
     }
+
+
 
 
 }

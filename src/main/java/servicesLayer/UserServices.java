@@ -1,7 +1,6 @@
-package services;
+package servicesLayer;
 
 import com.google.gson.Gson;
-import model.Task;
 import model.User;
 
 import java.io.*;
@@ -9,28 +8,25 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-public class ServicesLayer {  // singleton pattern
+public final class UserServices {  // singleton pattern
 
-    private static volatile ServicesLayer instance = null;
-    private static List<User> userList = new ArrayList<>();
-    private static List<Task> taskList = new ArrayList<>();
+    private static volatile UserServices instance = null;
+    private static List<User> userList = getAllUsers();
 
-    private ServicesLayer() {
+    private UserServices() {
         System.out.println("An instance of \"ServicesLayer\" has created ...");
     }
 
 
-    public static ServicesLayer getInstance() {
+    public static UserServices getInstance() {
 
         if(instance==null){
-            synchronized (ServicesLayer.class){
+            synchronized (UserServices.class){
                 if(instance==null){
-                    instance = new ServicesLayer();
+                    instance = new UserServices();
                 }
             }
         }
@@ -39,7 +35,7 @@ public class ServicesLayer {  // singleton pattern
     }
 
 
-    public List<User> getAllUsers() {
+    public static List<User> getAllUsers() {
 
         userList = new ArrayList<>();
 
@@ -66,45 +62,8 @@ public class ServicesLayer {  // singleton pattern
     }
 
 
-    public List<Task> getAllTasks(){
-        taskList = new ArrayList<>();
 
-        try (FileReader fileReader = new FileReader("src/main/resources/database/tasks")) {
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
-            String line =null;
-            Gson gson = new Gson();
-
-            while((line = bufferedReader.readLine()) != null){
-                Task task = gson.fromJson(line , Task.class);
-                taskList.add(task);
-            }
-
-        }catch (IOException e){
-            e.printStackTrace();
-        }
-
-        return taskList;
-    }
-
-
-    public List<Task> getUserTasks(String username) {
-        if(Objects.isNull(taskList) || taskList.size()==0){
-            taskList =getAllTasks();
-        }
-
-        AtomicReference<List<Task>> userTasks = new AtomicReference<>();
-
-        userList.forEach(user->{
-            if(user.getUsername().equalsIgnoreCase(username)){
-                userTasks.set(user.getTasks());
-            }
-        });
-
-        return userTasks.get();
-    }
-
-
-    private void resetUsersSchema() {
+    private void saveChangesToDB() {
 
         File tmpFile = new File("src/main/resources/database/tmpUserFile");
         File oldFile = new File("src/main/resources/database/users");
@@ -149,34 +108,6 @@ public class ServicesLayer {  // singleton pattern
     }
 
 
-    private void resetTaskSchema() {
-        File tmpFile = new File("src/main/resources/database/tmpTaskFile");
-        File oldFile = new File("src/main/resources/database/tasks");
-        Gson gson = new Gson();
-
-        try (FileWriter fileWriter = new FileWriter("src/main/resources/database/tmpTaskFile")){
-            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-
-            taskList.forEach(task -> {
-                try {
-                    bufferedWriter.write(gson.toJson(task));
-                    bufferedWriter.newLine();
-                    bufferedWriter.flush();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-
-            bufferedWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
-        oldFile.delete();
-        tmpFile.renameTo(new File("src/main/resources/database/tasks"));
-    }
-
 
     public boolean isUserFound(String username, String password) throws IOException {
         userList = getAllUsers();
@@ -198,7 +129,7 @@ public class ServicesLayer {  // singleton pattern
     }
 
 
-    public void createUser(User newUser) throws IOException {
+    public User createUser(User newUser) throws IOException {
 
         long lines = 0;
         lines = Files.lines(Paths.get("src/main/resources/database/users")).count() + 1;
@@ -207,21 +138,14 @@ public class ServicesLayer {  // singleton pattern
             newUser.setPassword("admin");
         }
         userList.add(newUser);
-        resetUsersSchema();
+        saveChangesToDB();
 
+        return newUser;
     }
 
 
-    public void createTask(Task newTask) throws IOException {
-        long lines = 0;
-        lines = Files.lines(Paths.get("src/main/resources/database/tasks")).count() + 1;
-        newTask.setId(lines);
-        taskList.add(newTask);
-        resetTaskSchema();
-    }
 
-
-    public void updateUser(User user) throws FileNotFoundException {
+    public User updateUser(User user) throws FileNotFoundException {
 
         userList.stream().forEach(item -> {
             if (item.getUsername().equalsIgnoreCase(user.getUsername())) {
@@ -229,7 +153,9 @@ public class ServicesLayer {  // singleton pattern
             }
         });
 
-        resetUsersSchema();
+        saveChangesToDB();
+
+        return user;
     }
 
 
@@ -241,11 +167,9 @@ public class ServicesLayer {  // singleton pattern
 
         AtomicLong index = new AtomicLong(1);
 
-        userList.stream().forEach(item -> {
-            item.setId(index.getAndIncrement());
-        });
+        userList.stream().forEach(item ->item.setId(index.getAndIncrement()));
 
-        resetUsersSchema();
+        saveChangesToDB();
     }
 
 }

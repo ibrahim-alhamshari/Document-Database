@@ -1,11 +1,10 @@
 package model;
 
-public class Task {
+public final class Task {
 
     private long id;
     private String subject;
     private String description;
-    private User user;
 
     public Task(){}
 
@@ -13,7 +12,6 @@ public class Task {
     public Task(String subject , String description){
         this.subject = subject;
         this.description =description;
-        user = new User();
     }
 
     public long getId() {
@@ -40,13 +38,6 @@ public class Task {
         this.description = description;
     }
 
-    public model.User getUser() {
-        return user;
-    }
-
-    public void setUser(model.User user) {
-        this.user = user;
-    }
 
     @Override
     public String toString() {
