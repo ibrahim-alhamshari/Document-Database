@@ -6,6 +6,7 @@ import model.User;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -163,7 +164,7 @@ public final class UserServices {
 
         newUser.setId(index);
 
-        if(newUser.getRole().equals(User.Role.ADMIN)){
+        if(Objects.isNull(newUser.getRole()) || newUser.getRole().equals(User.Role.ADMIN)){
             newUser.setPassword("admin");
         }
 
