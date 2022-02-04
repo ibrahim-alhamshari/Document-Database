@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import servicesLayer.UserServices;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,9 +68,9 @@ public class ServicesLayerTest {
     @Test
     public void getAllUsers() throws IOException {
         List<User> userList = new ArrayList<>();
-        userList.addAll(UserServices.getAllUsers());
+        userList.addAll(UserServices.getInstance().getAllUsers());
 
-        assertEquals(userList.toString(), UserServices.getAllUsers().toString());
+        assertEquals(userList.toString(), UserServices.getInstance().getAllUsers().toString());
     }
 
 

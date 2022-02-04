@@ -1,8 +1,10 @@
 import model.Address;
+import model.Notification;
 import model.Task;
 import model.User;
 import queue.Queue;
 import servicesLayer.AddressServices;
+import servicesLayer.NotificationServices;
 import servicesLayer.UserServices;
 
 import java.io.*;
@@ -18,8 +20,9 @@ public class ServerHandler implements Runnable {
     private BufferedReader bufferedReader;
     private BufferedWriter bufferedWriter;
     private String clientUsername;
-    private UserServices servicesLayer;
+    private UserServices userServices;
     private AddressServices addressServices;
+    private NotificationServices notificationServices;
 
 
     public ServerHandler(Socket socket) throws IOException {
@@ -32,9 +35,9 @@ public class ServerHandler implements Runnable {
             e.printStackTrace();
         }
 
-        servicesLayer = UserServices.getInstance();
-        addressServices = new AddressServices();
-        serverHandlerList.add(this);
+        userServices = UserServices.getInstance();
+        addressServices = AddressServices.getInstance();
+        notificationServices = NotificationServices.getInstance();
 
     }
 
@@ -98,12 +101,15 @@ public class ServerHandler implements Runnable {
                 continue;
             }
 
-            boolean isUserFound = servicesLayer.isUserFound(username, password);
+            boolean isUserFound = userServices.isUserFound(username, password);
 
             if (isUserFound) {
                 this.clientUsername = username;
-                User user = servicesLayer.getUserByUserName(username);
-                if(servicesLayer.isAdmin(user) && password.equals("admin")){
+
+                serverHandlerList.add(this);
+
+                User user = userServices.getUserByUserName(username);
+                if(userServices.isAdmin(user) && password.equals("admin")){
                     changeAdminPassword(password);
                 }
 
@@ -124,20 +130,20 @@ public class ServerHandler implements Runnable {
 
     private void changeAdminPassword(String oldPassword) throws IOException {
 
-        User admin = servicesLayer.getUserByUserName(clientUsername);
+        User admin = userServices.getUserByUserName(clientUsername);
         if (admin.getPassword().equals(oldPassword)) {
             writeToClient("This is the default password, You have to change it.\nEnter a new password:");
 
             while (true){
                 String newPassword = bufferedReader.readLine();
 
-                if(newPassword.equals("") || newPassword.equalsIgnoreCase("admin")){
-                    writeToClient("You can not use this password!\nPlease re-enter a new password:");
+                if(newPassword.length()<8){
+                    writeToClient("Very short password. Re-enter the password again:");
                     continue;
                 }
 
                 admin.setPassword(newPassword);
-                servicesLayer.updateUser(admin);
+                userServices.updateUser(admin);
                 writeToClient("Successfully update the password");
                 break;
             }
@@ -150,15 +156,15 @@ public class ServerHandler implements Runnable {
 
     public void masterNode() throws IOException {
 
-        User user = servicesLayer.getUserByUserName(clientUsername);
-        boolean isAdmin = servicesLayer.isAdmin(user);
+        User user = userServices.getUserByUserName(clientUsername);
+        boolean isAdmin = userServices.isAdmin(user);
 
         if(isAdmin) {
             writeToClient("Admin processes: \n"
                     + "1. \"Get user info\"\n"
                     + "2. \"Add new user\"\n"
                     + "3. \"Update user info\"\n"
-                    + "4. \"Remove users\"\n"
+                    + "4. \"Remove user\"\n"
                     + "5. \"Assign task to user\"\n"
                     + "Type (exactly) the process that you want to execute:");
 
@@ -200,7 +206,7 @@ public class ServerHandler implements Runnable {
                     updateUserInfo();
                     break;
 
-                case "remove users":
+                case "remove user":
                     writeToClient("\"Remove users\": ");
                     removeUser();
                     break;
@@ -249,8 +255,8 @@ public class ServerHandler implements Runnable {
         while (true) {
 
             String username = this.bufferedReader.readLine();
-            User user = servicesLayer.getUserByUserName(username);
-            if (user == null) {
+            User user = userServices.getUserByUserName(username);
+            if (Objects.isNull(user.getId())) {
                 writeToClient("There is no user with this username: " + username);
                 writeToClient("Re-enter the username to see the details");
                 continue;
@@ -265,18 +271,18 @@ public class ServerHandler implements Runnable {
 
             Address address = user.getAddress();
 
-            if(address != null){
+            if(Objects.nonNull(address)){
                 writeToClient("Country: " + address.getCountry() + "\nCity: " +address.getCity() + "\npostalCode: " +address.getPostalCode());
             }
 
-            if(userTasks.size()>0){
-                writeToClient("\nHere are the tasks for "+username+ ":");
-            }
+            if(Objects.nonNull(userTasks) && userTasks.size()>0) {
+                writeToClient("\nHere are the tasks for " + username + ":");
 
-            for (Task task: userTasks){
-                writeToClient("Subject: " +task.getSubject());
-                writeToClient("Details: " + task.getDescription());
-                writeToClient("\n");
+                for (Task task : userTasks) {
+                    writeToClient("Subject: " + task.getSubject());
+                    writeToClient("Details: " + task.getDescription());
+                    writeToClient("\n");
+                }
             }
 
             break;
@@ -293,8 +299,8 @@ public class ServerHandler implements Runnable {
         while (true) {
 
             String username = this.bufferedReader.readLine();
-            User user = servicesLayer.getUserByUserName(username);
-            if (user == null) {
+            User user = userServices.getUserByUserName(username);
+            if (Objects.isNull(user.getId())) {
                 writeToClient("There is no user with this username: " + username);
                 writeToClient("Re-enter the username to see the details");
                 continue;
@@ -309,18 +315,18 @@ public class ServerHandler implements Runnable {
 
             Address address = user.getAddress();
 
-            if(address != null){
+            if(Objects.nonNull(address)){
                 writeToClient("Country: " + address.getCountry() + "\nCity: " +address.getCity() + "\npostalCode: " +address.getPostalCode());
             }
 
-            if(userTasks.size()>0){
-                writeToClient("\nHere are the tasks for "+username+ ":");
-            }
+            if(Objects.nonNull(userTasks) && userTasks.size()>0) {
+                writeToClient("\nHere are the tasks for " + username + ":");
 
-            for (Task task: userTasks){
-                writeToClient("Subject: " +task.getSubject());
-                writeToClient("Details: " + task.getDescription());
-                writeToClient("\n");
+                for (Task task : userTasks) {
+                    writeToClient("Subject: " + task.getSubject());
+                    writeToClient("Details: " + task.getDescription());
+                    writeToClient("\n");
+                }
             }
 
             break;
@@ -337,8 +343,8 @@ public class ServerHandler implements Runnable {
         while (true) {
 
             String username = this.bufferedReader.readLine();
-            User user = servicesLayer.getUserByUserName(username);
-            if (user == null) {
+            User user = userServices.getUserByUserName(username);
+            if (Objects.isNull(user.getId())) {
                 writeToClient("There is no user with this username: " + username);
                 writeToClient("Re-enter the username to see the details");
                 continue;
@@ -353,18 +359,18 @@ public class ServerHandler implements Runnable {
 
             Address address = user.getAddress();
 
-            if(address != null){
+            if(Objects.nonNull(address)){
                 writeToClient("Country: " + address.getCountry() + "\nCity: " +address.getCity() + "\npostalCode: " +address.getPostalCode());
             }
 
-            if(userTasks.size()>0){
-                writeToClient("\nHere are the tasks for "+username+ ":");
-            }
+            if(Objects.nonNull(userTasks) && userTasks.size()>0) {
+                writeToClient("\nHere are the tasks for " + username + ":");
 
-            for (Task task: userTasks){
-                writeToClient("Subject: " +task.getSubject());
-                writeToClient("Details: " + task.getDescription());
-                writeToClient("\n");
+                for (Task task : userTasks) {
+                    writeToClient("Subject: " + task.getSubject());
+                    writeToClient("Details: " + task.getDescription());
+                    writeToClient("\n");
+                }
             }
 
             break;
@@ -381,8 +387,8 @@ public class ServerHandler implements Runnable {
         while (true) {
 
             String username = this.bufferedReader.readLine();
-            User user = servicesLayer.getUserByUserName(username);
-            if (user == null) {
+            User user = userServices.getUserByUserName(username);
+            if (Objects.isNull(user.getId())) {
                 writeToClient("There is no user with this username: " + username);
                 writeToClient("Re-enter the username to see the details");
                 continue;
@@ -397,18 +403,18 @@ public class ServerHandler implements Runnable {
 
             Address address = user.getAddress();
 
-            if(address != null){
-                writeToClient("Country: " + address.getCountry() + "\nCity: " +address.getCity() + "\nPostalCode: " +address.getPostalCode());
+            if(Objects.nonNull(address)){
+                writeToClient("Country: " + address.getCountry() + "\nCity: " +address.getCity() + "\npostalCode: " +address.getPostalCode());
             }
 
-            if(userTasks.size()>0){
-                writeToClient("\nHere are the tasks for "+username+ ":");
-            }
+            if(Objects.nonNull(userTasks) && userTasks.size()>0) {
+                writeToClient("\nHere are the tasks for " + username + ":");
 
-            for (Task task: userTasks){
-                writeToClient("Subject: " +task.getSubject());
-                writeToClient("Details: " + task.getDescription());
-                writeToClient("\n");
+                for (Task task : userTasks) {
+                    writeToClient("Subject: " + task.getSubject());
+                    writeToClient("Details: " + task.getDescription());
+                    writeToClient("\n");
+                }
             }
 
             break;
@@ -416,6 +422,8 @@ public class ServerHandler implements Runnable {
 
         writeToClient("Now the processes for getting a user has finished, you can choose another options...\n********************************");
     }
+
+
 
 
     public void createNewUser() throws IOException {
@@ -426,9 +434,9 @@ public class ServerHandler implements Runnable {
             writeToClient(message);
             String username = this.bufferedReader.readLine();
 
-            User userFromDB = servicesLayer.getUserByUserName(username);
+            User userFromDB = userServices.getUserByUserName(username);
 
-            if(userFromDB!=null){
+            if(Objects.nonNull(userFromDB.getId())){
                 writeToClient("This username already exist !!");
                 message ="Re-enter the username for the new user";
                 continue;
@@ -483,8 +491,9 @@ public class ServerHandler implements Runnable {
 
             User newUser = new User(username , password , email , role);
 
+            userServices.createUser(newUser);
 
-            servicesLayer.createUser(newUser);
+            informClientByChanges(username , "Create user");
             writeToClient("Successfully create a new user with username: '" + username + "'\n");
             writeToClient("Now the processes for create a new user has finished, you can choose another options...\n********************************");
 
@@ -502,9 +511,9 @@ public class ServerHandler implements Runnable {
             writeToClient(message);
             String username = this.bufferedReader.readLine();
 
-            User user = servicesLayer.getUserByUserName(username);
+            User user = userServices.getUserByUserName(username);
 
-            if(user == null){
+            if(Objects.isNull(user.getId())){
                 writeToClient("This username is not exist !!");
                 message ="Re-enter the username for a new task";
                 continue;
@@ -523,15 +532,18 @@ public class ServerHandler implements Runnable {
             }
 
             Task task = new Task(subject , description);
-
             List<Task> taskList = user.getTasks();
+
+            if(Objects.isNull(taskList)){
+                taskList = new ArrayList<>();
+            }
             taskList.add(task);
 
             user.setTasks(taskList);
 
-            servicesLayer.updateUser(user);
+            userServices.updateUser(user);
 
-            informClientByChanges(user.getUsername());
+            informClientByChanges(user.getUsername() , "Create task");
 
             writeToClient("Successfully assigned a task for the user: '" + username + "'\n");
             writeToClient("Now the processes for create a task has finished, you can choose another options...\n ********************************");
@@ -549,9 +561,9 @@ public class ServerHandler implements Runnable {
             writeToClient("Enter the username that you are going to update: ");
             String username = this.bufferedReader.readLine();
 
-            User user = servicesLayer.getUserByUserName(username);
-            if(user==null){
-                writeToClient("There is no user with this username: " + username + "\n");
+            User user = userServices.getUserByUserName(username);
+            if(Objects.isNull(user.getId())){
+                writeToClient("There is no user with this username: " + username);
                 continue;
             }
 
@@ -565,12 +577,13 @@ public class ServerHandler implements Runnable {
             }
             user.setEmail(email);
 
-            Address address = updateUserAddress();
+            Address address = updateUserAddress(); // Get the address from the client
             user.setAddress(address);
 
-            servicesLayer.updateUser(user);
+            userServices.updateUser(user);
             writeToClient("successfully update user with username \""+ username +"\"\n");
-            informClientByChanges(user.getUsername());
+
+            informClientByChanges(user.getUsername() , "Update");
 
             break;
         }
@@ -582,7 +595,7 @@ public class ServerHandler implements Runnable {
     public Address updateUserAddress() throws IOException {
 
         writeToClient("Update address. Select Address:");
-        List<Address> addresses = AddressServices.getAllAddresses();
+        List<Address> addresses = AddressServices.getInstance().getAllAddresses();
 
         while (true) {
             for (Address address : addresses) {
@@ -592,7 +605,7 @@ public class ServerHandler implements Runnable {
             String country = this.bufferedReader.readLine();
             Address address = addressServices.getAddressByCountryName(country);
 
-            if (address == null) {
+            if (Objects.isNull(address.getId())) {
                 writeToClient("Incorrect country name. \nSelect an address again");
                 continue;
             }
@@ -615,15 +628,15 @@ public class ServerHandler implements Runnable {
                 continue;
             }
 
-            User user = servicesLayer.getUserByUserName(username);
-            if (user == null) {
-                writeToClient("There is no user with this username: " + username + "\n");
+            User user = userServices.getUserByUserName(username);
+            if (Objects.isNull(user.getId())) {
+                writeToClient("There is no user with this username: " + username);
                 continue;
             }
 
-            servicesLayer.removeUser(user);
+            userServices.removeUser(user);
             writeToClient("successfully delete user with username \" " + username +" \"...\n");
-            informClientByChanges(user.getUsername());
+            informClientByChanges(user.getUsername() , "Delete");
 
             break;
         }
@@ -660,10 +673,17 @@ public class ServerHandler implements Runnable {
     }
 
 
-    public void informClientByChanges(String _username){
-        serverHandlerList.forEach(e->{
-            if(e.clientUsername.equals(_username)){
+    public void informClientByChanges(String _username, String process) {
+        serverHandlerList.forEach(e -> {
+            if (e.clientUsername.equals(_username)) {
                 e.writeToClient("Your data have updated");
+
+                try {
+                    Notification notification = new Notification(process, e.userServices.getUserByUserName(_username));
+                    notificationServices.createNotification(notification);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
             }
         });
     }

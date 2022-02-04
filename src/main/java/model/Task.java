@@ -1,6 +1,6 @@
 package model;
 
-public final class Task {
+public class Task {
 
     private long id;
     private String subject;

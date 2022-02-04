@@ -75,11 +75,11 @@ public class Client {
     public void listenForMessage(){
 
         new Thread(() -> {
-            String msgFromServer;
+            StringBuilder msgFromServer;
 
             while (socket.isConnected()){
                 try {
-                    msgFromServer = bufferedReader.readLine();
+                    msgFromServer = new StringBuilder(bufferedReader.readLine()); //Beware the performance of string concatenation.
                     System.out.println(msgFromServer);
                 } catch (IOException e) {
                    closeEverything(socket , bufferedWriter , bufferedReader);

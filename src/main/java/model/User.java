@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class User {
+public class User {
 
     private Long id;
     private LocalDateTime registerDate;

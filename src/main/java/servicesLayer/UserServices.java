@@ -4,40 +4,58 @@ import com.google.gson.Gson;
 import model.User;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
-public final class UserServices {  // singleton pattern
+public final class UserServices {
 
-    private static volatile UserServices instance = null;
-    private static List<User> userList = getAllUsers();
+    private static volatile UserServices instance;
+    private static List<User> userList;
+    private static Lock lock = new ReentrantLock(true);
+    private static long index; //The index for the new user.
+
 
     private UserServices() {
-        System.out.println("An instance of \"ServicesLayer\" has created ...");
+        instance = null;
+        userList = getAllUsersFromDB();
+        index = initializeIndex();
     }
 
 
     public static UserServices getInstance() {
 
         if(instance==null){
-            synchronized (UserServices.class){
+            lock.lock();//Acquire the lock
                 if(instance==null){
                     instance = new UserServices();
                 }
-            }
+            lock.unlock();//Release the lock
         }
 
         return instance;
     }
 
 
-    public static List<User> getAllUsers() {
 
-        userList = new ArrayList<>();
+    private long initializeIndex(){
+
+        if(userList.size()>0){
+
+            //Get the index of last object in the DB and increment it by 1.
+            index =userList.get(userList.size()-1).getId() +1;
+
+        }else {
+            index=1; //no objects in the DB.
+        }
+
+        return index;
+    }
+
+    private static List<User> getAllUsersFromDB() {
 
         //FileReader read the data one char by one, so I don't need it. I need to read line by line.
         try (FileReader fileReader = new FileReader("src/main/resources/database/users")) {
@@ -47,6 +65,8 @@ public final class UserServices {  // singleton pattern
             //Create a string to hold the JSON string in each line.
             String line = null;
             Gson gson = new Gson();
+
+            userList= new ArrayList<>();
 
             //loop through the lines while there are a lines in the DB.
             while ((line = bufferedReader.readLine()) != null) {
@@ -62,14 +82,15 @@ public final class UserServices {  // singleton pattern
     }
 
 
+    private void saveChangesToDB() {
 
-    private void saveUserChangesToDB() {
-
-        File tmpFile = new File("src/main/resources/database/tmpUserFile");
-        File oldFile = new File("src/main/resources/database/users");
-        Gson gson = new Gson();
+        lock.lock();
 
         try {
+            File tmpFile = new File("src/main/resources/database/tmpUserFile");
+            File oldFile = new File("src/main/resources/database/users");
+            Gson gson = new Gson();
+
             FileWriter fileWriter = new FileWriter("src/main/resources/database/tmpUserFile", true);
             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 
@@ -98,15 +119,21 @@ public final class UserServices {  // singleton pattern
             oldFile.delete();
             tmpFile.renameTo(new File("src/main/resources/database/users"));
 
-            userList = getAllUsers();
+            userList = getAllUsersFromDB();
 
         } catch (IOException e) {
             e.printStackTrace();
 
         }
 
+        lock.unlock();
     }
 
+
+
+    public List<User> getAllUsers(){
+        return userList;
+    }
 
 
     public boolean isUserFound(String username, String password) throws IOException {
@@ -121,24 +148,28 @@ public final class UserServices {  // singleton pattern
 
 
     public User getUserByUserName(String username) {
+
         List<User> _user = userList.stream().filter(e -> e.getUsername().equalsIgnoreCase(username)).collect(Collectors.toList());
         if (_user.size() > 0) {
-            return _user.get(0);
+            return _user.get(0); // The username is unique, so it will be one object only in the list.
         }
+
         return new User();
     }
 
 
+
     public User createUser(User newUser) throws IOException {
 
-        long lines = 0;
-        lines = Files.lines(Paths.get("src/main/resources/database/users")).count() + 1;
-        newUser.setId(lines);
-        if(newUser.getPassword()==null){
+        newUser.setId(index);
+
+        if(newUser.getRole().equals(User.Role.ADMIN)){
             newUser.setPassword("admin");
         }
+
         userList.add(newUser);
-        saveUserChangesToDB();
+        saveChangesToDB();
+        index++;
 
         return newUser;
     }
@@ -147,29 +178,25 @@ public final class UserServices {  // singleton pattern
 
     public User updateUser(User user) throws FileNotFoundException {
 
-        userList.stream().forEach(item -> {
-            if (item.getUsername().equalsIgnoreCase(user.getUsername())) {
-                item = user;
-            }
-        });
+        for (User object: userList) {
 
-        saveUserChangesToDB();
+            if (object.getUsername().equalsIgnoreCase(user.getUsername())) {
+                object = user;
+                break;
+            }
+
+        }
+        saveChangesToDB();
+        user =null;
 
         return user;
     }
 
 
     public void removeUser(User user) throws FileNotFoundException {
+
         userList.remove(user);
-
-        if (userList.size() == 0)
-            return;
-
-        AtomicLong index = new AtomicLong(1);
-
-        userList.stream().forEach(item ->item.setId(index.getAndIncrement()));
-
-        saveUserChangesToDB();
+        saveChangesToDB();
     }
 
 }

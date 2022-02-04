@@ -4,22 +4,33 @@ import java.time.LocalDateTime;
 
 public class Notification {
 
-    private String subject;
+    private long id;
+    private String process;
     private final LocalDateTime notificationDate;
     private User user;
 
-    public Notification(String subject, User user) {
-        this.subject = subject;
+    public Notification(String process, User user) {
+        this.process = process;
         this.user = user;
         this.notificationDate= LocalDateTime.now();
     }
 
-    public String getSubject() {
-        return subject;
+
+
+    public long getId() {
+        return id;
     }
 
-    public void setSubject(String subject) {
-        this.subject = subject;
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public String getProcess() {
+        return process;
+    }
+
+    public void setProcess(String process) {
+        this.process = process;
     }
 
     public LocalDateTime getNotificationDate() {
@@ -38,7 +49,8 @@ public class Notification {
     @Override
     public String toString() {
         return "Notification{" +
-                "subject='" + subject + '\'' +
+                "id=" + id +
+                ", process='" + process + '\'' +
                 ", notificationDate=" + notificationDate +
                 ", user=" + user +
                 '}';
