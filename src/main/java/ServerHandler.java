@@ -65,24 +65,6 @@ public class ServerHandler implements Runnable {
     }
 
 
-    public void sendMessageToClients(String messageToClients) throws IOException {
-
-        for (ServerHandler serverHandler : serverHandlerList) {
-            if(Objects.nonNull(this.clientUsername)) {
-
-                if (!serverHandler.clientUsername.equals(this.clientUsername)) {
-                    serverHandler.bufferedWriter.write(messageToClients);
-                    serverHandler.bufferedWriter.newLine();
-                    serverHandler.bufferedWriter.flush();
-                }
-
-            }
-        }
-
-    }
-
-
-
     public void login() throws IOException {
         String message ="Enter your username:";
 
@@ -686,6 +668,24 @@ public class ServerHandler implements Runnable {
                 }
             }
         });
+    }
+
+
+
+    public void sendMessageToClients(String messageToClients) throws IOException {
+
+        for (ServerHandler serverHandler : serverHandlerList) {
+            if(Objects.nonNull(this.clientUsername)) {
+
+                if (!serverHandler.clientUsername.equals(this.clientUsername)) {
+                    serverHandler.bufferedWriter.write(messageToClients);
+                    serverHandler.bufferedWriter.newLine();
+                    serverHandler.bufferedWriter.flush();
+                }
+
+            }
+        }
+
     }
 
 
