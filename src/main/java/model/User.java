@@ -1,9 +1,6 @@
 package model;
 
-import sun.security.util.Password;
-
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 public class User {
@@ -34,10 +31,10 @@ public class User {
 
     public User(String username , String password , String email , Role role){
         this.username = username;
-        this.password =password;
-        this.email= email;
-        this.role =role;
-        this.registerDate =LocalDateTime.now();
+        this.password = password;
+        this.email = email;
+        this.role = role;
+        this.registerDate = LocalDateTime.now();
     }
 
 

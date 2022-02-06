@@ -12,7 +12,7 @@ public class Notification {
     public Notification(String process, User user) {
         this.process = process;
         this.user = user;
-        this.notificationDate= LocalDateTime.now();
+        this.notificationDate = LocalDateTime.now();
     }
 
 

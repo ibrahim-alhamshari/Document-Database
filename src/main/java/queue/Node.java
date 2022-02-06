@@ -6,7 +6,7 @@ public class Node<T> {
     Node next;
 
     Node(T value){
-        this.value=value;
+        this.value = value;
     }
 
 }

@@ -10,9 +10,9 @@ public class Queue<T> {
 
         if(rear==null){
             rear = newNode;
-            front=newNode;
+            front = newNode;
         }else {
-            rear.next=newNode;
+            rear.next = newNode;
             rear = newNode;
         }
 
@@ -26,7 +26,7 @@ public class Queue<T> {
 
         try {
             front = front.next;
-            tmp.next=null;
+            tmp.next = null;
             System.out.println("dequeue: " + tmp.value);
         }catch (Exception e){
             System.out.println("You are pass an empty queue");
@@ -40,13 +40,13 @@ public class Queue<T> {
         if(front==null)
             return false;
 
-        Node<T> tmp=front;
+        Node<T> tmp = front;
 
         while (tmp != null){
             if(tmp.value.equals(value)){
                 return true;
             }
-            tmp=tmp.next;
+            tmp = tmp.next;
         }
 
         return false;

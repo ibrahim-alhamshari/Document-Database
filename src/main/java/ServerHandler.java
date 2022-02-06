@@ -648,7 +648,7 @@ public class ServerHandler implements Runnable {
 
     public void removeClientHandler() throws IOException { //if the user left the website.
         serverHandlerList.remove(this);
-        sendMessageToClients("SERVER: " + clientUsername + " has left the chat!");
+        sendMessageToClients("SERVER: " + clientUsername + " has left the party!");
     }
 
 
@@ -675,7 +675,7 @@ public class ServerHandler implements Runnable {
 
     public void informClientByChanges(String _username, String process) {
         serverHandlerList.forEach(e -> {
-            if (e.clientUsername.equals(_username)) {
+            if (e.clientUsername.equalsIgnoreCase(_username)) {
                 e.writeToClient("Your data have updated");
 
                 try {
