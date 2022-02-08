@@ -33,7 +33,7 @@ public class Client {
 
 
     private void closeEverything(Socket socket , BufferedWriter _bufferedWriter , BufferedReader _bufferedReader){
-        System.out.println("THE SERVER HAS SHUTTING DOWN, YOU NEED TO RECONNECT AGAIN");
+        System.out.println("The SERVER has shutting down, you need to reconnect again !!");
         try {
             if(bufferedWriter != null)
                 bufferedWriter.close();
@@ -79,7 +79,7 @@ public class Client {
 
             while (socket.isConnected()){
                 try {
-                    msgFromServer = new StringBuilder(bufferedReader.readLine()); //Beware the performance of string concatenation.
+                    msgFromServer = new StringBuilder(bufferedReader.readLine()); //Be aware the performance of string concatenation.
                     System.out.println(msgFromServer);
                 } catch (IOException e) {
                    closeEverything(socket , bufferedWriter , bufferedReader);

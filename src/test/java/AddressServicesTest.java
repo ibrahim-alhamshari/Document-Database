@@ -44,7 +44,7 @@ public class AddressServicesTest {
     @DisplayName("Test for getAllAddresses() method")
     public void getAllAddresses(){
 
-        assertEquals(6, addressServices.getAllAddresses().size());
+        assertEquals(6, addressServices.getDataFromCache().size());
 
     }
 

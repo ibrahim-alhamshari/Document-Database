@@ -51,12 +51,12 @@ public class ServerHandler implements Runnable {
                 login();
 
             } catch (IOException e) {
-
                 try {
-                    removeClientHandler();
+                    removeUserFromServerHandlerList();
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
+
                 break;
 
             }
@@ -70,15 +70,15 @@ public class ServerHandler implements Runnable {
 
         while (true) {
 
-            writeToClient(message);
+            sendMessageToUser(message);
 
             String username = bufferedReader.readLine();
 
-            writeToClient("Enter your password: ");
+            sendMessageToUser("Enter your password: ");
             String password = bufferedReader.readLine();
 
             if (username.equals("") || password.equals("")) {
-                writeToClient("Please fill all fields !");
+                sendMessageToUser("Please fill all fields !");
                 message ="Re-enter your username";
                 continue;
             }
@@ -88,18 +88,18 @@ public class ServerHandler implements Runnable {
             if (isUserFound) {
                 this.clientUsername = username;
 
-                serverHandlerList.add(this);
+                serverHandlerList.add(this); //Once the user is logined, it's information must be added to the handler list
 
                 User user = userServices.getUserByUserName(username);
                 if(userServices.isAdmin(user) && password.equals("admin")){
                     changeAdminPassword(password);
                 }
 
-                writeToClient("Success login ...");
+                sendMessageToUser("Success login ...");
                 break;
             }
 
-            writeToClient("Incorrect username or password !");
+            sendMessageToUser("Incorrect username or password !");
             message = "Re-Enter your username:";
         }
 
@@ -114,19 +114,19 @@ public class ServerHandler implements Runnable {
 
         User admin = userServices.getUserByUserName(clientUsername);
         if (admin.getPassword().equals(oldPassword)) {
-            writeToClient("This is the default password, You have to change it.\nEnter a new password:");
+            sendMessageToUser("This is the default password, You have to change it.\nEnter a new password:");
 
             while (true){
                 String newPassword = bufferedReader.readLine();
 
                 if(newPassword.length()<8){
-                    writeToClient("Very short password. Re-enter the password again:");
+                    sendMessageToUser("Very short password. Re-enter the password again:");
                     continue;
                 }
 
                 admin.setPassword(newPassword);
                 userServices.updateUser(admin);
-                writeToClient("Successfully update the password");
+                sendMessageToUser("Successfully update the password");
                 break;
             }
 
@@ -142,7 +142,7 @@ public class ServerHandler implements Runnable {
         boolean isAdmin = userServices.isAdmin(user);
 
         if(isAdmin) {
-            writeToClient("Admin processes: \n"
+            sendMessageToUser("Admin processes: \n"
                     + "1. \"Get user info\"\n"
                     + "2. \"Add new user\"\n"
                     + "3. \"Update user info\"\n"
@@ -154,7 +154,7 @@ public class ServerHandler implements Runnable {
 
             switch (query.toLowerCase().replace("\"", "")) {
                 case "get user info":
-                    writeToClient("\"Get user info\": ");
+                    sendMessageToUser("\"Get user info\": ");
                     while (true) {
                         if (!queue.isContain("getUserInfoNode1")) {
                             queue.enqueue("getUserInfoNode1");
@@ -179,31 +179,31 @@ public class ServerHandler implements Runnable {
                     break;
 
                 case "add new user":
-                    writeToClient("\"Add new user\": ");
+                    sendMessageToUser("\"Add new user\": ");
                     createNewUser();
                     break;
 
                 case "update user info":
-                    writeToClient("\"Update user info\": ");
+                    sendMessageToUser("\"Update user info\": ");
                     updateUserInfo();
                     break;
 
                 case "remove user":
-                    writeToClient("\"Remove users\": ");
+                    sendMessageToUser("\"Remove users\": ");
                     removeUser();
                     break;
 
                 case "assign task to user":
-                    writeToClient("\"Assign task to user:\"");
+                    sendMessageToUser("\"Assign task to user:\"");
                     createTask();
                     break;
 
                 default:
-                    writeToClient("Your input does not match any case, please try again");
+                    sendMessageToUser("Your input does not match any case, please try again");
             }
         }else {
-            writeToClient("You can type your name or any username to get info.");
-            writeToClient("\"Get user info\": ");
+            sendMessageToUser("You can type your name or any username to get info.");
+            sendMessageToUser("\"Get user info\": ");
             while (true) {
                 if (!queue.isContain("getUserInfoNode1")) {
                     queue.enqueue("getUserInfoNode1");
@@ -232,21 +232,21 @@ public class ServerHandler implements Runnable {
 
     public void getUserInfoNode1() throws IOException {
 
-        writeToClient("Write any username to get information about it (Node 1):");
+        sendMessageToUser("Write any username to get information about it (Node 1):");
 
         while (true) {
 
             String username = this.bufferedReader.readLine();
             User user = userServices.getUserByUserName(username);
             if (Objects.isNull(user.getId())) {
-                writeToClient("There is no user with this username: " + username);
-                writeToClient("Re-enter the username to see the details");
+                sendMessageToUser("There is no user with this username: " + username);
+                sendMessageToUser("Re-enter the username to see the details");
                 continue;
             }
 
             List<Task> userTasks = user.getTasks();
 
-            writeToClient("User info:\n" + "Username: " + username
+            sendMessageToUser("User info:\n" + "Username: " + username
                     +"\nRole: " + user.getRole()
                     + "\nEmail: " + user.getEmail()
                     + "\nRegistration date: " + user.getRegisterDate());
@@ -254,43 +254,43 @@ public class ServerHandler implements Runnable {
             Address address = user.getAddress();
 
             if(Objects.nonNull(address)){
-                writeToClient("Country: " + address.getCountry() + "\nCity: " +address.getCity() + "\npostalCode: " +address.getPostalCode());
+                sendMessageToUser("Country: " + address.getCountry() + "\nCity: " +address.getCity() + "\npostalCode: " +address.getPostalCode());
             }
 
             if(Objects.nonNull(userTasks) && userTasks.size()>0) {
-                writeToClient("\nHere are the tasks for " + username + ":");
+                sendMessageToUser("\nHere are the tasks for " + username + ":");
 
                 for (Task task : userTasks) {
-                    writeToClient("Subject: " + task.getSubject());
-                    writeToClient("Details: " + task.getDescription());
-                    writeToClient("\n");
+                    sendMessageToUser("Subject: " + task.getSubject());
+                    sendMessageToUser("Details: " + task.getDescription());
+                    sendMessageToUser("\n");
                 }
             }
 
             break;
         }
 
-        writeToClient("Now the processes for getting a user has finished, you can choose another options...\n********************************");
+        sendMessageToUser("Now the processes for getting a user has finished, you can choose another options...\n********************************");
     }
 
 
     public void getUserInfoNode2() throws IOException {
 
-        writeToClient("Write any username to get information about it (Node 2):");
+        sendMessageToUser("Write any username to get information about it (Node 2):");
 
         while (true) {
 
             String username = this.bufferedReader.readLine();
             User user = userServices.getUserByUserName(username);
             if (Objects.isNull(user.getId())) {
-                writeToClient("There is no user with this username: " + username);
-                writeToClient("Re-enter the username to see the details");
+                sendMessageToUser("There is no user with this username: " + username);
+                sendMessageToUser("Re-enter the username to see the details");
                 continue;
             }
 
             List<Task> userTasks = user.getTasks();
 
-            writeToClient("User info:\n" + "Username: " + username
+            sendMessageToUser("User info:\n" + "Username: " + username
                     +"\nRole: " + user.getRole()
                     + "\nEmail: " + user.getEmail()
                     + "\nRegistration date: " + user.getRegisterDate());
@@ -298,43 +298,43 @@ public class ServerHandler implements Runnable {
             Address address = user.getAddress();
 
             if(Objects.nonNull(address)){
-                writeToClient("Country: " + address.getCountry() + "\nCity: " +address.getCity() + "\npostalCode: " +address.getPostalCode());
+                sendMessageToUser("Country: " + address.getCountry() + "\nCity: " +address.getCity() + "\npostalCode: " +address.getPostalCode());
             }
 
             if(Objects.nonNull(userTasks) && userTasks.size()>0) {
-                writeToClient("\nHere are the tasks for " + username + ":");
+                sendMessageToUser("\nHere are the tasks for " + username + ":");
 
                 for (Task task : userTasks) {
-                    writeToClient("Subject: " + task.getSubject());
-                    writeToClient("Details: " + task.getDescription());
-                    writeToClient("\n");
+                    sendMessageToUser("Subject: " + task.getSubject());
+                    sendMessageToUser("Details: " + task.getDescription());
+                    sendMessageToUser("\n");
                 }
             }
 
             break;
         }
 
-        writeToClient("Now the processes for getting a user has finished, you can choose another options...\n********************************");
+        sendMessageToUser("Now the processes for getting a user has finished, you can choose another options...\n********************************");
     }
 
 
     public void getUserInfoNode3() throws IOException {
 
-        writeToClient("Write any username to get information about it (Node 3):");
+        sendMessageToUser("Write any username to get information about it (Node 3):");
 
         while (true) {
 
             String username = this.bufferedReader.readLine();
             User user = userServices.getUserByUserName(username);
             if (Objects.isNull(user.getId())) {
-                writeToClient("There is no user with this username: " + username);
-                writeToClient("Re-enter the username to see the details");
+                sendMessageToUser("There is no user with this username: " + username);
+                sendMessageToUser("Re-enter the username to see the details");
                 continue;
             }
 
             List<Task> userTasks = user.getTasks();
 
-            writeToClient("User info:\n" + "Username: " + username
+            sendMessageToUser("User info:\n" + "Username: " + username
                     +"\nRole: " + user.getRole()
                     + "\nEmail: " + user.getEmail()
                     + "\nRegistration date: " + user.getRegisterDate());
@@ -342,43 +342,43 @@ public class ServerHandler implements Runnable {
             Address address = user.getAddress();
 
             if(Objects.nonNull(address)){
-                writeToClient("Country: " + address.getCountry() + "\nCity: " +address.getCity() + "\npostalCode: " +address.getPostalCode());
+                sendMessageToUser("Country: " + address.getCountry() + "\nCity: " +address.getCity() + "\npostalCode: " +address.getPostalCode());
             }
 
             if(Objects.nonNull(userTasks) && userTasks.size()>0) {
-                writeToClient("\nHere are the tasks for " + username + ":");
+                sendMessageToUser("\nHere are the tasks for " + username + ":");
 
                 for (Task task : userTasks) {
-                    writeToClient("Subject: " + task.getSubject());
-                    writeToClient("Details: " + task.getDescription());
-                    writeToClient("\n");
+                    sendMessageToUser("Subject: " + task.getSubject());
+                    sendMessageToUser("Details: " + task.getDescription());
+                    sendMessageToUser("\n");
                 }
             }
 
             break;
         }
 
-        writeToClient("Now the processes for getting a user has finished, you can choose another options...\n********************************");
+        sendMessageToUser("Now the processes for getting a user has finished, you can choose another options...\n********************************");
     }
 
 
     public void getUserInfoNode4() throws IOException {
 
-        writeToClient("Write any username to get information about it (Node 4):");
+        sendMessageToUser("Write any username to get information about it (Node 4):");
 
         while (true) {
 
             String username = this.bufferedReader.readLine();
             User user = userServices.getUserByUserName(username);
             if (Objects.isNull(user.getId())) {
-                writeToClient("There is no user with this username: " + username);
-                writeToClient("Re-enter the username to see the details");
+                sendMessageToUser("There is no user with this username: " + username);
+                sendMessageToUser("Re-enter the username to see the details");
                 continue;
             }
 
             List<Task> userTasks = user.getTasks();
 
-            writeToClient("User info:\n" + "Username: " + username
+            sendMessageToUser("User info:\n" + "Username: " + username
                     +"\nRole: " + user.getRole()
                     + "\nEmail: " + user.getEmail()
                     + "\nRegistration date: " + user.getRegisterDate());
@@ -386,25 +386,24 @@ public class ServerHandler implements Runnable {
             Address address = user.getAddress();
 
             if(Objects.nonNull(address)){
-                writeToClient("Country: " + address.getCountry() + "\nCity: " +address.getCity() + "\npostalCode: " +address.getPostalCode());
+                sendMessageToUser("Country: " + address.getCountry() + "\nCity: " +address.getCity() + "\npostalCode: " +address.getPostalCode());
             }
 
             if(Objects.nonNull(userTasks) && userTasks.size()>0) {
-                writeToClient("\nHere are the tasks for " + username + ":");
+                sendMessageToUser("\nHere are the tasks for " + username + ":");
 
                 for (Task task : userTasks) {
-                    writeToClient("Subject: " + task.getSubject());
-                    writeToClient("Details: " + task.getDescription());
-                    writeToClient("\n");
+                    sendMessageToUser("Subject: " + task.getSubject());
+                    sendMessageToUser("Details: " + task.getDescription());
+                    sendMessageToUser("\n");
                 }
             }
 
             break;
         }
 
-        writeToClient("Now the processes for getting a user has finished, you can choose another options...\n********************************");
+        sendMessageToUser("Now the processes for getting a user has finished, you can choose another options...\n********************************");
     }
-
 
 
 
@@ -413,33 +412,33 @@ public class ServerHandler implements Runnable {
         String message ="Enter the username for the new user: ";
         while (true){
 
-            writeToClient(message);
+            sendMessageToUser(message);
             String username = this.bufferedReader.readLine();
 
             User userFromDB = userServices.getUserByUserName(username);
 
             if(Objects.nonNull(userFromDB.getId())){
-                writeToClient("This username already exist !!");
+                sendMessageToUser("This username already exist !!");
                 message ="Re-enter the username for the new user";
                 continue;
             }
 
 
-            writeToClient("Enter the email for the new user: ");
+            sendMessageToUser("Enter the email for the new user: ");
             String email = this.bufferedReader.readLine();
 
             if(username.equals("")|| email.equals("")){
-                writeToClient("You need to fill all the fields");
+                sendMessageToUser("You need to fill all the fields");
                 message = "Re-enter the username for the new user";
                 continue;
             }
 
 
-            writeToClient("Enter the role for the new user (ADMIN , USER): ");
+            sendMessageToUser("Enter the role for the new user (ADMIN , USER): ");
             String roleString = this.bufferedReader.readLine();
 
             if(!roleString.equalsIgnoreCase("ADMIN") && !roleString.equalsIgnoreCase("USER")){
-                writeToClient("Incorrect user role. Fill the fields again");
+                sendMessageToUser("Incorrect user role. Fill the fields again");
                 message = "Re-enter the username for the new user";
                 continue;
             }
@@ -447,7 +446,7 @@ public class ServerHandler implements Runnable {
             String password=null;
 
             if(roleString.equalsIgnoreCase("USER")){
-                writeToClient("Enter the password for the new user: ");
+                sendMessageToUser("Enter the password for the new user: ");
 
                 while (true){
                     password  = this.bufferedReader.readLine();
@@ -456,7 +455,7 @@ public class ServerHandler implements Runnable {
                         break;
                     }
 
-                    writeToClient("Very short password. Re-enter the password again");
+                    sendMessageToUser("Very short password. Re-enter the password again");
                 }
 
             }
@@ -475,9 +474,11 @@ public class ServerHandler implements Runnable {
 
             userServices.createUser(newUser);
 
-            informClientByChanges(username , "Create user");
-            writeToClient("Successfully create a new user with username: '" + username + "'\n");
-            writeToClient("Now the processes for create a new user has finished, you can choose another options...\n********************************");
+            informUserByChanges(username);
+            saveChangesToNotificationsDB(newUser , "Create user");
+
+            sendMessageToUser("Successfully create a new user with username: '" + username + "'\n");
+            sendMessageToUser("Now the processes for create a new user has finished, you can choose another options...\n********************************");
 
             break;
         }
@@ -490,25 +491,25 @@ public class ServerHandler implements Runnable {
         String message ="Enter a username to assign task to it: ";
         while (true){
 
-            writeToClient(message);
+            sendMessageToUser(message);
             String username = this.bufferedReader.readLine();
 
             User user = userServices.getUserByUserName(username);
 
             if(Objects.isNull(user.getId())){
-                writeToClient("This username is not exist !!");
+                sendMessageToUser("This username is not exist !!");
                 message ="Re-enter the username for a new task";
                 continue;
             }
 
-            writeToClient("Enter the subject for the task: ");
+            sendMessageToUser("Enter the subject for the task: ");
             String subject = this.bufferedReader.readLine();
 
-            writeToClient("Enter the description for the task: ");
+            sendMessageToUser("Enter the description for the task: ");
             String description = this.bufferedReader.readLine();
 
             if(username.equals("") || subject.equals("") || description.equals("")){
-                writeToClient("You need to fill all the fields");
+                sendMessageToUser("You need to fill all the fields");
                 message = "Re-enter the username for the task:";
                 continue;
             }
@@ -525,12 +526,12 @@ public class ServerHandler implements Runnable {
 
             userServices.updateUser(user);
 
-            informClientByChanges(user.getUsername() , "Create task");
+            informUserByChanges(user.getUsername());
+            saveChangesToNotificationsDB(user , "Create task");
 
-            writeToClient("Successfully assigned a task for the user: '" + username + "'\n");
-            writeToClient("Now the processes for create a task has finished, you can choose another options...\n ********************************");
+            sendMessageToUser("Successfully assigned a task for the user: '" + username + "'\n");
+            sendMessageToUser("Now the processes for create a task has finished, you can choose another options...\n ********************************");
 
-            informAllClients("***** A new task has assigned to " + user.getUsername() + " *****");
             break;
         }
 
@@ -540,21 +541,21 @@ public class ServerHandler implements Runnable {
     public void updateUserInfo() throws IOException {
 
         while (true){
-            writeToClient("Enter the username that you are going to update: ");
+            sendMessageToUser("Enter the username that you are going to update: ");
             String username = this.bufferedReader.readLine();
 
             User user = userServices.getUserByUserName(username);
             if(Objects.isNull(user.getId())){
-                writeToClient("There is no user with this username: " + username);
+                sendMessageToUser("There is no user with this username: " + username);
                 continue;
             }
 
-            writeToClient("Here are the user details: \n Username: "+ user.getUsername()
+            sendMessageToUser("Here are the user details: \n Username: "+ user.getUsername()
                     + "\n Email: " + user.getEmail() +"\nEnter the email that you are going to update: ");
             String email = this.bufferedReader.readLine();
 
             if(email.equals("")){
-                writeToClient("You need to fill the email!!");
+                sendMessageToUser("You need to fill the email!!");
                 continue;
             }
             user.setEmail(email);
@@ -563,32 +564,33 @@ public class ServerHandler implements Runnable {
             user.setAddress(address);
 
             userServices.updateUser(user);
-            writeToClient("successfully update user with username \""+ username +"\"\n");
+            sendMessageToUser("successfully update user with username \""+ username +"\"\n");
 
-            informClientByChanges(user.getUsername() , "Update");
+            informUserByChanges(user.getUsername());
+            saveChangesToNotificationsDB(user , "Delete");
 
             break;
         }
 
-        writeToClient("Now the processes of updating a user info has finished, you can choose another options...\n********************************");
+        sendMessageToUser("Now the processes of updating a user info has finished, you can choose another options...\n********************************");
     }
 
 
     public Address updateUserAddress() throws IOException {
 
-        writeToClient("Update address. Select Address:");
-        List<Address> addresses = AddressServices.getInstance().getAllAddresses();
+        sendMessageToUser("Update address. Select Address:");
+        List<Address> addresses = AddressServices.getInstance().getDataFromCache();
 
         while (true) {
             for (Address address : addresses) {
-                writeToClient(address.getCountry());
+                sendMessageToUser(address.getCountry());
             }
 
             String country = this.bufferedReader.readLine();
             Address address = addressServices.getAddressByCountryName(country);
 
             if (Objects.isNull(address.getId())) {
-                writeToClient("Incorrect country name. \nSelect an address again");
+                sendMessageToUser("Incorrect country name. \nSelect an address again");
                 continue;
             }
 
@@ -601,40 +603,71 @@ public class ServerHandler implements Runnable {
         String message = "Enter the username that you are going to remove: ";
 
         while (true) {
-            writeToClient(message);
+            sendMessageToUser(message);
             String username = bufferedReader.readLine();
 
             if(username.equalsIgnoreCase("admin")){
-                writeToClient("The Admin can not be deleted!");
+                sendMessageToUser("The Admin can not be deleted!");
                 message= "Re-enter a username to remove it";
                 continue;
             }
 
             User user = userServices.getUserByUserName(username);
             if (Objects.isNull(user.getId())) {
-                writeToClient("There is no user with this username: " + username);
+                sendMessageToUser("There is no user with this username: " + username);
                 continue;
             }
 
             userServices.removeUser(user);
-            writeToClient("successfully delete user with username \" " + username +" \"...\n");
-            informClientByChanges(user.getUsername() , "Delete");
+            sendMessageToUser("successfully delete user with username \" " + username +" \"...\n");
+            informUserByChanges(user.getUsername());
+            saveChangesToNotificationsDB(user , "Delete");
 
             break;
         }
 
-        writeToClient("Now the processes of removing a user has finished, you can choose another options...\n********************************");
+        sendMessageToUser("Now the processes of removing a user has finished, you can choose another options...\n********************************");
 
     }
 
 
-    public void removeClientHandler() throws IOException { //if the user left the website.
+
+    private void saveChangesToNotificationsDB(User user, String process){
+
+        try {
+            Notification notification = new Notification(user, process);
+            notificationServices.createNotification(notification);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+
+    public void removeUserFromServerHandlerList() throws IOException { //if the user logout from the website.
         serverHandlerList.remove(this);
-        sendMessageToClients("SERVER: " + clientUsername + " has left the party!");
+        informAllUsers("SERVER: " + clientUsername + " has left the party!");
     }
 
 
-    public void writeToClient(String message){
+    public void informUserByChanges(String _username) { // For any changes to the user's data.
+        serverHandlerList.forEach(e -> {
+            if (e.clientUsername.equalsIgnoreCase(_username)) {
+                e.sendMessageToUser("**** Your data have updated ****");
+            }
+        });
+    }
+
+
+    public void informAllUsers(String message){ // Send message to all the connected clients.
+        serverHandlerList.forEach(e->{
+            if(!e.clientUsername.equals(this.clientUsername)){
+                e.sendMessageToUser(message);
+            }
+        });
+    }
+
+
+    public void sendMessageToUser(String message){  //To send message from the server to the client
         try {
             this.bufferedWriter.write(message );
             this.bufferedWriter.newLine();
@@ -644,49 +677,5 @@ public class ServerHandler implements Runnable {
             e.printStackTrace();
         }
     }
-
-
-    public void informAllClients(String message){
-        serverHandlerList.forEach(e->{
-            if(!e.clientUsername.equals(this.clientUsername)){
-                e.writeToClient(message);
-            }
-        });
-    }
-
-
-    public void informClientByChanges(String _username, String process) {
-        serverHandlerList.forEach(e -> {
-            if (e.clientUsername.equalsIgnoreCase(_username)) {
-                e.writeToClient("Your data have updated");
-
-                try {
-                    Notification notification = new Notification(process, e.userServices.getUserByUserName(_username));
-                    notificationServices.createNotification(notification);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });
-    }
-
-
-
-    public void sendMessageToClients(String messageToClients) throws IOException {
-
-        for (ServerHandler serverHandler : serverHandlerList) {
-            if(Objects.nonNull(this.clientUsername)) {
-
-                if (!serverHandler.clientUsername.equals(this.clientUsername)) {
-                    serverHandler.bufferedWriter.write(messageToClients);
-                    serverHandler.bufferedWriter.newLine();
-                    serverHandler.bufferedWriter.flush();
-                }
-
-            }
-        }
-
-    }
-
 
 }

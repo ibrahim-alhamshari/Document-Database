@@ -14,17 +14,16 @@ public final class AddressServices {
 
 
     private static volatile AddressServices instance;
-    private static List<Address> addressList;
+    private static List<Address> cacheList;
     private static Lock lock = new ReentrantLock(true);
     private static long index; //The index for the new address
 
 
     private AddressServices(){
         instance = null;
-        addressList = getAllAddressesFromDB();
+        cacheList = getAllDataFromDB();
         index = initializeIndex();
     }
-
 
 
     public static AddressServices getInstance() {
@@ -42,12 +41,10 @@ public final class AddressServices {
     }
 
 
-
-
     private long initializeIndex(){
-        if(addressList.size()>0){
+        if(cacheList.size()>0){
             //Get the index of last object in the DB and increment it by 1.
-            index =addressList.get(addressList.size()-1).getId() +1;
+            index = cacheList.get(cacheList.size()-1).getId() +1;
         }else {
             index=1; //No objects in the DB.
         }
@@ -67,7 +64,7 @@ public final class AddressServices {
             FileWriter fileWriter = new FileWriter("src/main/resources/database/tmpAddressFile", true);
             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 
-            addressList.forEach(address -> {
+            cacheList.forEach(address -> {
                 try {
 
                     String data = gson.toJson(address);
@@ -84,46 +81,47 @@ public final class AddressServices {
             oldFile.delete();
             tmpFile.renameTo(new File("src/main/resources/database/address"));
 
-            addressList = getAllAddressesFromDB();
+            cacheList = getAllDataFromDB(); // When the DB updated, we have to update the cache.
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
 
-    private static List<Address> getAllAddressesFromDB() {
+    private static List<Address> getAllDataFromDB() {
 
         try (FileReader fileReader = new FileReader("src/main/resources/database/address")) {
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             String line = null;
             Gson gson = new Gson();
 
-            addressList = new ArrayList<>();
+            cacheList = new ArrayList<>();
 
             Address address = null;
             while ((line = bufferedReader.readLine()) != null) {
                 address = gson.fromJson(line, Address.class);
-                addressList.add(address);
+                cacheList.add(address);
             }
 
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return addressList;
+        return cacheList;
     }
 
 
-    public List<Address> getAllAddresses(){
-        return addressList;
+    //It represents the cache in my application
+    public List<Address> getDataFromCache(){
+        return cacheList;
     }
 
 
     public Address createAddress(Address newAddress) throws IOException {
 
-        long index = addressList.size();
+        long index = cacheList.size();
         newAddress.setId(index);
-        addressList.add(newAddress);
+        cacheList.add(newAddress);
         saveChangesToDB();
 
         return newAddress;
@@ -131,12 +129,12 @@ public final class AddressServices {
 
 
     public boolean isAddressFound(String country) {
-        return addressList.stream().anyMatch(address -> address.getCountry().equalsIgnoreCase(country));
+        return cacheList.stream().anyMatch(address -> address.getCountry().equalsIgnoreCase(country));
     }
 
 
     public Address getAddressByCountryName(String country) {
-        List<Address> addresses = addressList.stream().filter(address -> address.getCountry().equalsIgnoreCase(country)).collect(Collectors.toList());
+        List<Address> addresses = cacheList.stream().filter(address -> address.getCountry().equalsIgnoreCase(country)).collect(Collectors.toList());
 
         if (addresses.size() > 0) {
             return addresses.get(0);

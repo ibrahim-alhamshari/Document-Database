@@ -9,7 +9,7 @@ public class Notification {
     private final LocalDateTime notificationDate;
     private User user;
 
-    public Notification(String process, User user) {
+    public Notification(User user ,String process ) {
         this.process = process;
         this.user = user;
         this.notificationDate = LocalDateTime.now();

@@ -15,7 +15,7 @@ public class NotificationServicesTest {
     @DisplayName("Test for createNotification() method")
     public void createNotification() throws IOException {
         User user = new User("Ahmad" , "12345");
-        Notification notification = new Notification("Delete" ,user );
+        Notification notification = new Notification( user , "Delete" );
 
         NotificationServices notificationServices = NotificationServices.getInstance();
 
@@ -29,6 +29,6 @@ public class NotificationServicesTest {
 
         NotificationServices notificationServices = NotificationServices.getInstance();
 
-        assertEquals(3, notificationServices.getAllNotifications().size());
+        assertEquals(3, notificationServices.getDataFromCache().size());
     }
 }

@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import model.Notification;
 
 import java.io.*;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -16,14 +15,14 @@ import java.util.concurrent.locks.ReentrantLock;
 public final class NotificationServices {
 
     private static volatile NotificationServices instance;
-    private static List<Notification> notificationList;
+    private static List<Notification> cacheList;
     private static Lock lock= new ReentrantLock(true);
     private static long index; //The index for the new notifications
 
 
     private NotificationServices(){
         instance = null;
-        notificationList= getAllNotificationsFromDB();
+        cacheList = getAllDataFromDB();
         index = initializeIndex();
     }
 
@@ -45,10 +44,10 @@ public final class NotificationServices {
 
     private long initializeIndex(){
 
-        if(notificationList.size()>0){
+        if(cacheList.size()>0){
 
             //Get the index of last object in the DB and increment it by 1.
-            index =notificationList.get(notificationList.size()-1).getId() +1;
+            index = cacheList.get(cacheList.size()-1).getId() +1;
 
         }else {
             index=1;//no objects in the DB.
@@ -58,26 +57,25 @@ public final class NotificationServices {
     }
 
 
-    private static List<Notification> getAllNotificationsFromDB(){
+    private static List<Notification> getAllDataFromDB(){
 
         try (FileReader fileReader = new FileReader("src/main/resources/database/notifications")){
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             String line = null;
             Gson gson = new Gson();
-            notificationList = new ArrayList<>();
+            cacheList = new ArrayList<>();
 
             while ((line = bufferedReader.readLine()) != null) {
                 Notification data = gson.fromJson(line, Notification.class);
-                notificationList.add(data);
+                cacheList.add(data);
             }
 
         }catch (IOException e){
             e.printStackTrace();
         }
 
-        return notificationList;
+        return cacheList;
     }
-
 
 
     private void saveChangesToDB(){
@@ -92,7 +90,7 @@ public final class NotificationServices {
             FileWriter fileWriter = new FileWriter("src/main/resources/database/tmpNotificationFile", true);
             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 
-            notificationList.forEach(user -> {
+            cacheList.forEach(user -> {
                 try {
 
                     String jsonData = gson.toJson(user);
@@ -110,7 +108,7 @@ public final class NotificationServices {
             oldFile.delete();
             tmpFile.renameTo(new File("src/main/resources/database/notifications"));
 
-            notificationList = getAllNotificationsFromDB();
+            cacheList = getAllDataFromDB(); // When the DB updated, we have to update the cache.
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -122,10 +120,15 @@ public final class NotificationServices {
     }
 
 
+    public List<Notification> getDataFromCache(){
+        return cacheList;
+    }
+
+
     public Notification createNotification(Notification notification) throws IOException{
 
         notification.setId(index);
-        notificationList.add(notification);
+        cacheList.add(notification);
         saveChangesToDB();
         index++;
 
@@ -133,9 +136,5 @@ public final class NotificationServices {
 
     }
 
-
-    public List<Notification> getAllNotifications(){
-        return notificationList;
-    }
 
 }
