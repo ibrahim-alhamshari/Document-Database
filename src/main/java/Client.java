@@ -27,7 +27,7 @@ public class Client {
 
         Client client = new Client(_socket);
         client.listenForMessage();
-        client.sendMessage();
+        client.sendMessageToServer();
     }
 
 
@@ -51,7 +51,7 @@ public class Client {
 
 
 
-    public void sendMessage(){
+    public void sendMessageToServer(){
 
        new Thread(()->{
            try {
