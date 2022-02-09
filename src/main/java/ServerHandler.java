@@ -579,7 +579,7 @@ public class ServerHandler implements Runnable {
     public Address updateUserAddress() throws IOException {
 
         sendMessageToUser("Update address. Select Address:");
-        List<Address> addresses = AddressServices.getInstance().getDataFromCache();
+        List<Address> addresses = AddressServices.getInstance().getDataFromAddressList();
 
         while (true) {
             for (Address address : addresses) {

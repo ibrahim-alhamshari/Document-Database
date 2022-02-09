@@ -5,6 +5,7 @@ import model.User;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
@@ -14,15 +15,17 @@ import java.util.stream.Collectors;
 public final class UserServices {
 
     private static volatile UserServices instance;
-    private static List<User> cacheList;
+    private static List<User> userList;
     private static Lock lock = new ReentrantLock(true);
     private static long index; //The index for the new user.
+    private static Hashtable<String, User> hashtable; //It represents the cache in my application
 
 
     private UserServices() {
         instance = null;
-        cacheList = getAllDataFromDB();
+        userList = getAllDataFromDB();
         index = initializeIndex();
+        hashtable = new Hashtable<>();
     }
 
 
@@ -43,10 +46,10 @@ public final class UserServices {
 
     private long initializeIndex(){
 
-        if(cacheList.size()>0){
+        if(userList.size()>0){
 
             //Get the index of last object in the DB and increment it by 1.
-            index = cacheList.get(cacheList.size()-1).getId() +1;
+            index = userList.get(userList.size()-1).getId() +1;
 
         }else {
             index=1; //no objects in the DB.
@@ -67,19 +70,19 @@ public final class UserServices {
             String line = null;
             Gson gson = new Gson();
 
-            cacheList = new ArrayList<>();
+            userList = new ArrayList<>();
 
             //loop through the lines while there are a lines in the DB.
             while ((line = bufferedReader.readLine()) != null) {
 
                 //Convert the JSON string to a JSON object and add them to the list.
                 User data = gson.fromJson(line, User.class);
-                cacheList.add(data);
+                userList.add(data);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return cacheList;
+        return userList;
     }
 
 
@@ -95,7 +98,7 @@ public final class UserServices {
             FileWriter fileWriter = new FileWriter("src/main/resources/database/tmpUserFile", true);
             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 
-            cacheList.forEach(user -> {
+            userList.forEach(user -> {
                 try {
 
                     //Converting user object to JSON string format
@@ -120,7 +123,8 @@ public final class UserServices {
             oldFile.delete();
             tmpFile.renameTo(new File("src/main/resources/database/users"));
 
-            cacheList = getAllDataFromDB(); // When the DB updated, we have to update the cache.
+            userList = getAllDataFromDB();
+            hashtable = new Hashtable<>();// When the DB updated, we have to update the cache.
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -132,14 +136,13 @@ public final class UserServices {
 
 
 
-    public List<User> getDataFromCache(){
-        return cacheList;
+    public List<User> getDataFromUserList(){
+        return userList;
     }
 
 
     public boolean isUserFound(String username, String password) throws IOException {
-        cacheList = getDataFromCache();
-        return cacheList.stream().anyMatch(e -> (e.getUsername().equalsIgnoreCase(username) && e.getPassword().equals(password)));
+        return userList.stream().anyMatch(e -> (e.getUsername().equalsIgnoreCase(username) && e.getPassword().equals(password)));
     }
 
 
@@ -150,8 +153,16 @@ public final class UserServices {
 
     public User getUserByUserName(String username) {
 
-        List<User> _user = cacheList.stream().filter(e -> e.getUsername().equalsIgnoreCase(username)).collect(Collectors.toList());
+        User userFromCache = hashtable.get(username); //Get object from cache
+
+        if(Objects.nonNull(userFromCache)){
+            return userFromCache;
+        }
+
+
+        List<User> _user = userList.stream().filter(e -> e.getUsername().equalsIgnoreCase(username)).collect(Collectors.toList());
         if (_user.size() > 0) {
+            hashtable.put(username , _user.get(0)); // Add this object to the cache.
             return _user.get(0); // The username is unique, so it will be one object only in the list.
         }
 
@@ -168,7 +179,7 @@ public final class UserServices {
             newUser.setPassword("admin");
         }
 
-        cacheList.add(newUser);
+        userList.add(newUser);
         saveChangesToDB();
         index++;
 
@@ -179,7 +190,7 @@ public final class UserServices {
 
     public User updateUser(User user) throws FileNotFoundException {
 
-        for (User object: cacheList) {
+        for (User object: userList) {
 
             if (object.getUsername().equalsIgnoreCase(user.getUsername())) {
                 object = user;
@@ -196,7 +207,7 @@ public final class UserServices {
 
     public void removeUser(User user) throws FileNotFoundException {
 
-        cacheList.remove(user);
+        userList.remove(user);
         saveChangesToDB();
     }
 

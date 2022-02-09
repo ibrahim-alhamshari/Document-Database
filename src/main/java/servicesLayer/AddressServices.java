@@ -4,8 +4,7 @@ import com.google.gson.Gson;
 import model.Address;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -14,15 +13,17 @@ public final class AddressServices {
 
 
     private static volatile AddressServices instance;
-    private static List<Address> cacheList;
+    private static List<Address> addressList;
     private static Lock lock = new ReentrantLock(true);
     private static long index; //The index for the new address
+    private static Hashtable<String, Address> hashtable; //It represents the cache in my application
 
 
     private AddressServices(){
         instance = null;
-        cacheList = getAllDataFromDB();
+        addressList = getAllDataFromDB();
         index = initializeIndex();
+        hashtable = new Hashtable<>();
     }
 
 
@@ -42,9 +43,9 @@ public final class AddressServices {
 
 
     private long initializeIndex(){
-        if(cacheList.size()>0){
+        if(addressList.size()>0){
             //Get the index of last object in the DB and increment it by 1.
-            index = cacheList.get(cacheList.size()-1).getId() +1;
+            index = addressList.get(addressList.size()-1).getId() +1;
         }else {
             index=1; //No objects in the DB.
         }
@@ -64,7 +65,7 @@ public final class AddressServices {
             FileWriter fileWriter = new FileWriter("src/main/resources/database/tmpAddressFile", true);
             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 
-            cacheList.forEach(address -> {
+            addressList.forEach(address -> {
                 try {
 
                     String data = gson.toJson(address);
@@ -81,7 +82,9 @@ public final class AddressServices {
             oldFile.delete();
             tmpFile.renameTo(new File("src/main/resources/database/address"));
 
-            cacheList = getAllDataFromDB(); // When the DB updated, we have to update the cache.
+            addressList = getAllDataFromDB();
+            hashtable = new Hashtable<>();// When the DB updated, we have to update the cache.
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -95,33 +98,33 @@ public final class AddressServices {
             String line = null;
             Gson gson = new Gson();
 
-            cacheList = new ArrayList<>();
+            addressList = new ArrayList<>();
 
             Address address = null;
             while ((line = bufferedReader.readLine()) != null) {
                 address = gson.fromJson(line, Address.class);
-                cacheList.add(address);
+                addressList.add(address);
             }
 
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return cacheList;
+        return addressList;
     }
 
 
-    //It represents the cache in my application
-    public List<Address> getDataFromCache(){
-        return cacheList;
+
+    public List<Address> getDataFromAddressList(){
+        return addressList;
     }
 
 
     public Address createAddress(Address newAddress) throws IOException {
 
-        long index = cacheList.size();
+        long index = addressList.size();
         newAddress.setId(index);
-        cacheList.add(newAddress);
+        addressList.add(newAddress);
         saveChangesToDB();
 
         return newAddress;
@@ -129,15 +132,22 @@ public final class AddressServices {
 
 
     public boolean isAddressFound(String country) {
-        return cacheList.stream().anyMatch(address -> address.getCountry().equalsIgnoreCase(country));
+        return addressList.stream().anyMatch(address -> address.getCountry().equalsIgnoreCase(country));
     }
 
 
     public Address getAddressByCountryName(String country) {
-        List<Address> addresses = cacheList.stream().filter(address -> address.getCountry().equalsIgnoreCase(country)).collect(Collectors.toList());
 
-        if (addresses.size() > 0) {
-            return addresses.get(0);
+        Address address = hashtable.get(country);// Try to get data from cache.
+        if(Objects.nonNull(address)){
+            return address;
+        }
+
+        List<Address> addressList = AddressServices.addressList.stream().filter(item -> item.getCountry().equalsIgnoreCase(country)).collect(Collectors.toList());
+
+        if (addressList.size() > 0) { // It will be on address in the list because the country is unique.
+            hashtable.put(country , addressList.get(0));
+            return addressList.get(0);
         }
 
         return new Address();
