@@ -29,13 +29,11 @@ public final class AddressServices {
 
     public static AddressServices getInstance() {
 
-        if(instance==null){
+        if (instance == null) {
             lock.lock();
-
-            if(instance==null){
-                instance = new AddressServices();
-            }
-
+                if (instance == null) {
+                    instance = new AddressServices();
+                }
             lock.unlock();
         }
         return instance;
@@ -56,6 +54,7 @@ public final class AddressServices {
 
     //Save any change for the addresses in DB.
     private void saveChangesToDB() {
+        lock.lock();
 
         try {
             File tmpFile = new File("src/main/resources/database/tmpAddressFile");
@@ -87,11 +86,14 @@ public final class AddressServices {
 
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            lock.unlock();
         }
     }
 
 
     private static List<Address> getAllDataFromDB() {
+        lock.lock();
 
         try (FileReader fileReader = new FileReader("src/main/resources/database/address")) {
             BufferedReader bufferedReader = new BufferedReader(fileReader);
@@ -108,6 +110,8 @@ public final class AddressServices {
 
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            lock.unlock();
         }
 
         return addressList;

@@ -62,6 +62,7 @@ public final class NotificationServices {
 
 
     private static List<Notification> getAllDataFromDB(){
+        lock.lock();
 
         try (FileReader fileReader = new FileReader("src/main/resources/database/notifications")){
             BufferedReader bufferedReader = new BufferedReader(fileReader);
@@ -76,6 +77,8 @@ public final class NotificationServices {
 
         }catch (IOException e){
             e.printStackTrace();
+        } finally {
+            lock.unlock();
         }
 
         return notificationList;
@@ -84,8 +87,9 @@ public final class NotificationServices {
 
     private void saveChangesToDB(){
 
+        lock.lock();
+
         try {
-            lock.lock();
 
             File tmpFile = new File("src/main/resources/database/tmpNotificationFile");
             File oldFile = new File("src/main/resources/database/notifications");
@@ -118,9 +122,9 @@ public final class NotificationServices {
         } catch (IOException e) {
             e.printStackTrace();
 
+        } finally {
+            lock.unlock();
         }
-
-        lock.unlock();
 
     }
 

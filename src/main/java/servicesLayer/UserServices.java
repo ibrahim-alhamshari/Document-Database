@@ -60,7 +60,7 @@ public final class UserServices {
 
 
     private static List<User> getAllDataFromDB() {
-
+        lock.lock();
         //FileReader read the data one char by one, so I don't need it. I need to read line by line.
         try (FileReader fileReader = new FileReader("src/main/resources/database/users")) {
 
@@ -81,6 +81,8 @@ public final class UserServices {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            lock.unlock();
         }
         return userList;
     }
@@ -128,10 +130,10 @@ public final class UserServices {
 
         } catch (IOException e) {
             e.printStackTrace();
-
+        } finally {
+            lock.unlock();
         }
 
-        lock.unlock();
     }
 
 
