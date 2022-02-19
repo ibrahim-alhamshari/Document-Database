@@ -95,8 +95,9 @@ public final class AddressServices {
     private static List<Address> getAllDataFromDB() {
         lock.lock();
 
-        try (FileReader fileReader = new FileReader("src/main/resources/database/address")) {
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
+        try (FileReader fileReader = new FileReader("src/main/resources/database/address");
+             BufferedReader bufferedReader = new BufferedReader(fileReader)) {
+
             String line = null;
             Gson gson = new Gson();
 

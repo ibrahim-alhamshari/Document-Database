@@ -62,10 +62,9 @@ public final class UserServices {
     private static List<User> getAllDataFromDB() {
         lock.lock();
         //FileReader read the data one char by one, so I don't need it. I need to read line by line.
-        try (FileReader fileReader = new FileReader("src/main/resources/database/users")) {
+        try (FileReader fileReader = new FileReader("src/main/resources/database/users");
+             BufferedReader bufferedReader = new BufferedReader(fileReader)) {
 
-            //Initialize bufferedReader
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
             //Create a string to hold the JSON string in each line.
             String line = null;
             Gson gson = new Gson();

@@ -645,7 +645,10 @@ public class ServerHandler implements Runnable {
 
     public void removeUserFromServerHandlerList() throws IOException { //if the user logout from the website.
         serverHandlerList.remove(this);
-        informAllUsers("SERVER: " + clientUsername + " has left the party!");
+
+        if(Objects.nonNull(this.clientUsername)) {
+            informAllUsers("SERVER: " + clientUsername + " has left the party!");
+        }
     }
 
 
