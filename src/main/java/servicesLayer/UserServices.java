@@ -61,7 +61,7 @@ public final class UserServices {
 
     private static List<User> getAllDataFromDB() {
         lock.lock();
-
+        //FileReader read the data one char by one, so I don't need it. I need to read line by line.
         try (FileReader fileReader = new FileReader("src/main/resources/database/users");
              BufferedReader bufferedReader = new BufferedReader(fileReader)) {
 
@@ -114,7 +114,7 @@ public final class UserServices {
                     //flush the data from buffedWriter
                     bufferedWriter.flush();
 
-                } catch (IOException |OutOfMemoryError e) {
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             });
