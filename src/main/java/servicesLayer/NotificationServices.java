@@ -64,8 +64,9 @@ public final class NotificationServices {
     private static List<Notification> getAllDataFromDB(){
         lock.lock();
 
-        try (FileReader fileReader = new FileReader("src/main/resources/database/notifications")){
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
+        try (FileReader fileReader = new FileReader("src/main/resources/database/notifications");
+             BufferedReader bufferedReader = new BufferedReader(fileReader)){
+
             String line = null;
             Gson gson = new Gson();
             notificationList = new ArrayList<>();
@@ -106,7 +107,7 @@ public final class NotificationServices {
                     bufferedWriter.newLine();
                     bufferedWriter.flush();
 
-                } catch (IOException e) {
+                } catch (IOException | OutOfMemoryError e) {
                     e.printStackTrace();
                 }
             });

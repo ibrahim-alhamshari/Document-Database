@@ -54,6 +54,7 @@ public final class AddressServices {
 
     //Save any change for the addresses in DB.
     private void saveChangesToDB() {
+
         lock.lock();
 
         try {
@@ -71,7 +72,7 @@ public final class AddressServices {
                     bufferedWriter.write(data);
                     bufferedWriter.newLine();
                     bufferedWriter.flush();
-                } catch (IOException e) {
+                } catch (IOException | OutOfMemoryError e) {
                     e.printStackTrace();
                 }
             });
@@ -95,8 +96,9 @@ public final class AddressServices {
     private static List<Address> getAllDataFromDB() {
         lock.lock();
 
-        try (FileReader fileReader = new FileReader("src/main/resources/database/address")) {
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
+        try (FileReader fileReader = new FileReader("src/main/resources/database/address");
+             BufferedReader bufferedReader = new BufferedReader(fileReader)) {
+
             String line = null;
             Gson gson = new Gson();
 

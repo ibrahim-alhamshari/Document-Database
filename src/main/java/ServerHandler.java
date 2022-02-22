@@ -51,6 +51,7 @@ public class ServerHandler implements Runnable {
                 login();
 
             } catch (IOException e) {
+
                 try {
                     removeUserFromServerHandlerList();
                 } catch (IOException ex) {
