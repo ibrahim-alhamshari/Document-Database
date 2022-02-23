@@ -4,28 +4,25 @@ import com.google.gson.Gson;
 import model.User;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
 
 public final class UserServices {
 
     private static volatile UserServices instance;
-    private static List<User> userList;
+//    private static List<User> userList;
+    private static HashMap<String , User> hashMap;
     private static Lock lock = new ReentrantLock(true);
     private static long index; //The index for the new user.
-    private static Hashtable<String, User> hashtable; //It represents the cache in my application
+    private static HashMap<String, User> cacheHashMap; //It represents the cache in my application
 
 
     private UserServices() {
         instance = null;
-        userList = getAllDataFromDB();
+        hashMap = getAllDataFromDB();
         index = initializeIndex();
-        hashtable = new Hashtable<>();
+        cacheHashMap = new HashMap<>();
     }
 
 
@@ -46,22 +43,28 @@ public final class UserServices {
 
     private long initializeIndex(){
 
-        if(userList.size()>0){
+        if(hashMap.isEmpty()){
 
-            //Get the index of last object in the DB and increment it by 1.
-            index = userList.get(userList.size()-1).getId() +1;
+            index = 1; //no objects in the DB.
 
         }else {
-            index=1; //no objects in the DB.
+            //Get the index of last object in the DB and increment it by 1.
+            index = 1;
+            hashMap.entrySet().forEach(e ->{
+                if(e.getValue().getId()>index){
+                    index = e.getValue().getId() + 1;
+                }
+            });
         }
 
         return index;
     }
 
 
-    private static List<User> getAllDataFromDB() {
+    private static HashMap<String , User> getAllDataFromDB() {
+
         lock.lock();
-        //FileReader read the data one char by one, so I don't need it. I need to read line by line.
+
         try (FileReader fileReader = new FileReader("src/main/resources/database/users");
              BufferedReader bufferedReader = new BufferedReader(fileReader)) {
 
@@ -69,21 +72,22 @@ public final class UserServices {
             String line = null;
             Gson gson = new Gson();
 
-            userList = new ArrayList<>();
+            hashMap = new HashMap<>();
 
             //loop through the lines while there are a lines in the DB.
             while ((line = bufferedReader.readLine()) != null) {
 
                 //Convert the JSON string to a JSON object and add them to the list.
                 User data = gson.fromJson(line, User.class);
-                userList.add(data);
+                hashMap.put(data.getUsername() , data);
             }
+
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             lock.unlock();
         }
-        return userList;
+        return hashMap;
     }
 
 
@@ -99,11 +103,10 @@ public final class UserServices {
             FileWriter fileWriter = new FileWriter("src/main/resources/database/tmpUserFile", true);
             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 
-            userList.forEach(user -> {
+            hashMap.entrySet().forEach(user -> {
                 try {
-
                     //Converting user object to JSON string format
-                    String jsonData = gson.toJson(user);
+                    String jsonData = gson.toJson(user.getValue());
 
                     //Writing the JSON string to the text file
                     bufferedWriter.write(jsonData);
@@ -124,8 +127,8 @@ public final class UserServices {
             oldFile.delete();
             tmpFile.renameTo(new File("src/main/resources/database/users"));
 
-            userList = getAllDataFromDB();
-            hashtable = new Hashtable<>();// When the DB updated, we have to update the cache.
+            hashMap = getAllDataFromDB();
+            cacheHashMap = new HashMap<>();// When the DB updated, we have to update the cache.
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -136,14 +139,16 @@ public final class UserServices {
     }
 
 
-
-    public List<User> getDataFromUserList(){
-        return userList;
+    public HashMap<String , User> getDataFromHashMap(){
+        return hashMap;
     }
 
 
     public boolean isUserFound(String username, String password) throws IOException {
-        return userList.stream().anyMatch(e -> (e.getUsername().equalsIgnoreCase(username) && e.getPassword().equals(password)));
+        if(hashMap.containsKey(username) && hashMap.get(username).getPassword().equals(password)){
+            return true;
+        }
+        return false;
     }
 
 
@@ -154,17 +159,17 @@ public final class UserServices {
 
     public User getUserByUserName(String username) {
 
-        User userFromCache = hashtable.get(username); //Get object from cache
+        User userFromCache = cacheHashMap.get(username); //Get object from cache
 
         if(Objects.nonNull(userFromCache)){
             return userFromCache;
         }
 
 
-        List<User> _user = userList.stream().filter(e -> e.getUsername().equalsIgnoreCase(username)).collect(Collectors.toList());
-        if (_user.size() > 0) {
-            hashtable.put(username , _user.get(0)); // Add this object to the cache.
-            return _user.get(0); // The username is unique, so it will be one object only in the list.
+        User _user = hashMap.get(username);
+        if (Objects.nonNull(_user)) {
+            cacheHashMap.put(username , _user); // Add this object to the cache.
+            return _user; // The username is unique, so it will be one object only in the list.
         }
 
         return new User();
@@ -174,14 +179,16 @@ public final class UserServices {
 
     public User createUser(User newUser) throws IOException {
 
-        newUser.setId(index);
-
         if(Objects.isNull(newUser.getRole()) || newUser.getRole().equals(User.Role.ADMIN)){
             newUser.setPassword("admin");
         }
 
-        userList.add(newUser);
+        newUser.setId(index);
+
+        hashMap.put(newUser.getUsername() , newUser);
+
         saveChangesToDB();
+
         index++;
 
         return newUser;
@@ -191,16 +198,10 @@ public final class UserServices {
 
     public User updateUser(User user) throws FileNotFoundException {
 
-        for (User object: userList) {
-
-            if (object.getUsername().equalsIgnoreCase(user.getUsername())) {
-                object = user;
-                break;
-            }
-
-        }
+        hashMap.put(user.getUsername(), user);
         saveChangesToDB();
-        user =null;
+
+        user = null;
 
         return user;
     }
@@ -208,7 +209,7 @@ public final class UserServices {
 
     public void removeUser(User user) throws FileNotFoundException {
 
-        userList.remove(user);
+        hashMap.remove(user.getUsername());
         saveChangesToDB();
     }
 

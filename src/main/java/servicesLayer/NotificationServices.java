@@ -5,10 +5,7 @@ import model.Address;
 import model.Notification;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -17,7 +14,8 @@ import java.util.concurrent.locks.ReentrantLock;
 public final class NotificationServices {
 
     private static volatile NotificationServices instance;
-    private static List<Notification> notificationList;
+//    private static List<Notification> notificationList;
+private static HashMap<String , Notification> hashMap;
     private static Lock lock= new ReentrantLock(true);
     private static long index; //The index for the new notifications
     private static Hashtable<String, Notification> hashtable; //It represents the cache in my application
@@ -25,7 +23,7 @@ public final class NotificationServices {
 
     private NotificationServices(){
         instance = null;
-        notificationList = getAllDataFromDB();
+        hashMap = getAllDataFromDB();
         index = initializeIndex();
         hashtable = new Hashtable<>();
     }
@@ -48,20 +46,25 @@ public final class NotificationServices {
 
     private long initializeIndex(){
 
-        if(notificationList.size()>0){
+        if(hashMap.isEmpty()){
 
-            //Get the index of last object in the DB and increment it by 1.
-            index = notificationList.get(notificationList.size()-1).getId() +1;
+            index = 1; //no objects in the DB.
 
         }else {
-            index=1;//no objects in the DB.
+            //Get the index of last object in the DB and increment it by 1.
+            index = 1;
+            hashMap.entrySet().forEach(e ->{
+                if(e.getValue().getId()>index){
+                    index = e.getValue().getId() + 1;
+                }
+            });
         }
 
         return index;
     }
 
 
-    private static List<Notification> getAllDataFromDB(){
+    private static HashMap<String, Notification> getAllDataFromDB(){
         lock.lock();
 
         try (FileReader fileReader = new FileReader("src/main/resources/database/notifications");
@@ -69,11 +72,11 @@ public final class NotificationServices {
 
             String line = null;
             Gson gson = new Gson();
-            notificationList = new ArrayList<>();
+            hashMap = new HashMap<>();
 
             while ((line = bufferedReader.readLine()) != null) {
                 Notification data = gson.fromJson(line, Notification.class);
-                notificationList.add(data);
+                hashMap.put(data.getProcess() , data);
             }
 
         }catch (IOException e){
@@ -82,7 +85,7 @@ public final class NotificationServices {
             lock.unlock();
         }
 
-        return notificationList;
+        return hashMap;
     }
 
 
@@ -99,10 +102,10 @@ public final class NotificationServices {
             FileWriter fileWriter = new FileWriter("src/main/resources/database/tmpNotificationFile", true);
             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 
-            notificationList.forEach(user -> {
+            hashMap.entrySet().forEach(item -> {
                 try {
 
-                    String jsonData = gson.toJson(user);
+                    String jsonData = gson.toJson(item.getValue());
                     bufferedWriter.write(jsonData);
                     bufferedWriter.newLine();
                     bufferedWriter.flush();
@@ -117,7 +120,7 @@ public final class NotificationServices {
             oldFile.delete();
             tmpFile.renameTo(new File("src/main/resources/database/notifications"));
 
-            notificationList = getAllDataFromDB();
+            hashMap = getAllDataFromDB();
             hashtable = new Hashtable<>();// When the DB updated, we have to update the cache.
 
         } catch (IOException e) {
@@ -130,15 +133,17 @@ public final class NotificationServices {
     }
 
 
-    public List<Notification> getDataFromNotificationList(){
-        return notificationList;
+    public HashMap<String , Notification> getDataFromHashMap(){
+        return hashMap;
     }
 
 
     public Notification createNotification(Notification notification) throws IOException{
 
         notification.setId(index);
-        notificationList.add(notification);
+
+        hashMap.put(notification.getProcess() , notification);
+
         saveChangesToDB();
         index++;
 

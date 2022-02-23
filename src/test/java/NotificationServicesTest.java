@@ -29,6 +29,6 @@ public class NotificationServicesTest {
 
         NotificationServices notificationServices = NotificationServices.getInstance();
 
-        assertEquals(3, notificationServices.getDataFromNotificationList().size());
+        assertEquals(3, notificationServices.getDataFromHashMap().size());
     }
 }

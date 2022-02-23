@@ -69,9 +69,9 @@ public class UserServicesTest {
     @DisplayName("Test for getAllUsers() method")
     public void getAllUsers() throws IOException {
         List<User> userList = new ArrayList<>();
-        userList.addAll(servicesLayer.UserServices.getInstance().getDataFromUserList());
+//        userList.addAll(servicesLayer.UserServices.getInstance().getDataFromUserList());
 
-        Assertions.assertEquals(userList.toString(), servicesLayer.UserServices.getInstance().getDataFromUserList().toString());
+        Assertions.assertEquals(userList.toString(), servicesLayer.UserServices.getInstance().getDataFromHashMap().toString());
     }
 
 

@@ -568,7 +568,7 @@ public class ServerHandler implements Runnable {
             sendMessageToUser("successfully update user with username \""+ username +"\"\n");
 
             informUserByChanges(user.getUsername());
-            saveChangesToNotificationsDB(user , "Delete");
+            saveChangesToNotificationsDB(user , "Update");
 
             break;
         }
@@ -580,11 +580,11 @@ public class ServerHandler implements Runnable {
     public Address updateUserAddress() throws IOException {
 
         sendMessageToUser("Update address. Select Address:");
-        List<Address> addresses = AddressServices.getInstance().getDataFromAddressList();
+        HashMap<String, Address> addresses = AddressServices.getInstance().getDataFromAddressList();
 
         while (true) {
-            for (Address address : addresses) {
-                sendMessageToUser(address.getCountry());
+            for (Map.Entry<String, Address> address : addresses.entrySet()) {
+                sendMessageToUser(address.getValue().getCountry());
             }
 
             String country = this.bufferedReader.readLine();
